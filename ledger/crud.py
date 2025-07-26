@@ -1,15 +1,15 @@
-import click
+from enum import Enum
 
 
 LEDGER = "/.ledger"
 
-@click.command()
-def create(expense: str, amount: int) -> None:
+
+def add(expense: str, amount: int) -> None:
     """Create a new expense"""
     expense_name = expense.title()
     amount_spent = float(amount)
 
-    pass
+    print(expense_name, amount_spent)
 
 
 def read()-> None:
