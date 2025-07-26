@@ -1,0 +1,26 @@
+[project]
+name = "ledger"
+version = "0.1.0"
+description = "Smart ledger that takes care of your expenses"
+authors = [
+    {name = "Chinyere",email = "chinyereunamba17@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "python-dotenv (>=1.1.1,<2.0.0)"
+]
+
+[tool.poetry]
+
+[tool.poetry.group.dev.dependencies]
+click = "^8.2.1"
+typer = "^0.16.0"
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+ledger = "ledger.main:cli"
