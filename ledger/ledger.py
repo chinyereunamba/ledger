@@ -8,12 +8,12 @@ import csv
 import pandas as pd
 from pathlib import Path
 
-LEDGER = Path("ledger.json")
+LEDGER = Path("../ledger.json")
 
 
 def load_ledger(mode: str):
     try:
-        return open("ledger.json", mode)
+        return open(LEDGER, mode)
     except FileNotFoundError:
         if mode == "r":
             return open("ledger.json", "w+")
@@ -135,14 +135,19 @@ def get_stats():
 
     record = []
 
-    for date, expenses in data:
+    for date, expenses in data.items():
         for item in expenses:
             record.append({
                 "date": date,
                 "expense": item['expense'],
                 "amount": item['amount']
             })
-    df = pd.DataFrame(record)
 
+    df = pd.DataFrame(record)
     stats = df.groupby('expense')['amount'].sum()
+    print(stats, type(stats))
     return stats
+
+def delete_all():
+    f = load_ledger('w+')
+    f.write("{}")
