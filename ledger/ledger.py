@@ -5,7 +5,7 @@ from rich import print
 from rich.table import Table
 from rich.console import Console
 import csv
-import pandas as pd 
+import pandas as pd
 from pathlib import Path
 
 LEDGER = Path("ledger.json")
@@ -79,6 +79,7 @@ def get_summary_by_week():
                  for i in range(-6, 1)]
     return date_list
 
+
 def all_time():
     f = load_ledger("r")
     data = json.load(f)
@@ -89,12 +90,12 @@ def all_time():
     for date, expenses in data.items():  # Use .items() to get key-value pairs
         for expense in expenses:
             table.add_row(date, expense["expense"], f"{expense['amount']}")
-            total += int(expense["amount"])  # Ensure amount is treated as an integer
+            # Ensure amount is treated as an integer
+            total += int(expense["amount"])
 
-    table.add_row("", "[bold green]Total Expenditure[/bold green]", f"[bold green]{total:,}[/bold green]")
+    table.add_row("", "[bold green]Total Expenditure[/bold green]",
+                  f"[bold green]{total:,}[/bold green]")
     console.print(table)
-
-
 
 
 def get_category(category: str):
@@ -103,6 +104,7 @@ def get_category(category: str):
 
     for item in data:
         pass
+
 
 def json_to_csv():
     # Load the JSON data
@@ -125,3 +127,22 @@ def json_to_csv():
     # Write the DataFrame to a CSV file
     df.to_csv("output.csv", encoding='utf-8', index=False)
     print("✅ Exported to output.csv successfully.")
+
+
+def get_stats():
+    f = load_ledger('r')
+    data = json.load(f)
+
+    record = []
+
+    for date, expenses in data:
+        for item in expenses:
+            record.append({
+                "date": date,
+                "expense": item['expense'],
+                "amount": item['amount']
+            })
+    df = pd.DataFrame(record)
+
+    stats = df.groupby('expense')['amount'].sum()
+    return stats
