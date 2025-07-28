@@ -1,148 +1,167 @@
-## 🧾 QuickLedger
+QuickLedger
 
-A fast, intuitive, **CLI-first expense tracker** built with Python & Typer — track your daily spending using natural language, export summaries, and optionally extend via a lightweight API.
+QuickLedger is a fast, intuitive, CLI-first expense tracker built with Python and Typer.
+Track your daily spending using natural language, export summaries, and optionally extend functionality via a lightweight FastAPI backend.
 
----
-
-### ⚡ Features
-
-* ✅ Add expenses via command line (`ledger add`)
-* 📅 View by day, week, or range
-* 🧠 Natural language support (e.g. `Bought food for 2000`)
-* 📊 Summary and analytics
-* 🧹 Edit and delete entries
-* 📤 Export to CSV
-* 🌐 Simple REST API (no auth yet)
-* 📝 JSON-based storage (easy to inspect and backup)
-* 🐍 Pythonic, Typer-powered CLI with FastAPI backend
-* 📦 Poetry-managed project
 
 ---
 
-### 🚀 Getting Started
+Features
 
-#### 1. Clone the repo
+- Add expenses via command line (ledger add)
 
-```bash
-git clone https://github.com/yourusername/quickledger.git
+- View by day, week, or date range
+
+- Natural language input (e.g. Bought food for 2000)
+
+- Summary and analytics
+
+- Edit and delete entries
+
+- Export to CSV
+
+- Simple REST API (no authentication yet)
+
+- JSON-based storage (easy to inspect and back up)
+
+- Pythonic, Typer-powered CLI with optional FastAPI backend
+
+- Poetry-managed project
+
+
+
+---
+
+Getting Started
+
+1. Clone the repository
+
+
+
+git clone https://github.com/chinyereunamba/ledger.git
 cd ledger
-```
 
-#### 2. Install dependencies
+2. Install dependencies
 
-```bash
+
+
 poetry install
-```
 
-#### 3. Run the CLI
+3. Run the CLI
 
-```bash
+
+
 poetry run ledger
-```
+
 
 ---
 
-### 🧑‍💻 CLI Commands
+CLI Usage
 
-#### ➕ Add Expense
+Add Expense
+bash```
 
-```bash
 ledger add
 ```
 
-Supports prompts or natural language:
+Or via natural language:
 
-```bash
 ledger say "Bought food for 1500"
-```
 
-#### 📅 View Expenses
+View Expenses
+bash```
 
-```bash
 ledger view --date 2025-07-25
 ledger view --week
 ledger view --range 2025-07-01 2025-07-25
 ```
 
-#### ✏️ Edit or Delete
+Edit or Delete Entry
 
-```bash
+bash```
 ledger edit --date 2025-07-24 --index 1
 ledger delete --date 2025-07-24 --index 1
 ```
 
-#### 📤 Export
+Export to CSV
 
-```bash
+bash```
 ledger export --path my_expenses.csv
 ```
 
 ---
 
-### 🌐 API
+API (Optional)
 
-Start the FastAPI server:
+To run the FastAPI server:
 
-```bash
-poetry run uvicorn api.main:app --reload
+bash```
+cd api
+poetry run uvicorn main:app --reload
 ```
 
-#### 🔗 Available Endpoints
+Endpoints
 
-| Method | Endpoint           | Description                    |
-| ------ | ------------------ | ------------------------------ |
-| GET    | `/expenses/`       | Get all expenses               |
-| POST   | `/expenses/`       | Add a new expense              |
-| GET    | `/expenses/{date}` | Get expenses for a date        |
-| DELETE | `/expenses/{date}` | Delete all expenses for a date |
-| GET    | `/summary/`        | Get total summary              |
-| GET    | `/summary/{date}`  | Summary for a specific date    |
-| GET    | `/summary/week`    | Past 7 days summary            |
-| GET    | `/summary/range`   | Summary for date range         |
+Method	Endpoint	Description
 
-> ⚠️ No authentication yet — use locally or behind a private proxy.
+GET	/expenses/	Get all expenses
+POST	/expenses/	Add a new expense
+GET	/expenses/{date}	Get expenses for a date
+DELETE	/expenses/{date}	Delete all expenses for a date
+GET	/summary/	Get total summary
+GET	/summary/{date}	Summary for a specific date
+GET	/summary/week	Past 7 days summary
+GET	/summary/range	Summary for a date range
+
+
+Note: No authentication yet — intended for local use or behind a private proxy.
+
 
 ---
 
-### 📂 Project Structure
+Project Structure
 
-```
-quickledger/
-├── ledger/               # CLI logic & utils
+bash```
+
+ledger/
+├── ledger/               # CLI logic and utilities
 │   ├── cli.py
 │   ├── ledger.py
 │   ├── utils.py
 │   └── constants.py
 ├── api/                  # FastAPI backend
 │   ├── main.py
-│   ├── routes.py
+│   ├── routes/
+│   │   └── __init__.py
 │   ├── models.py
 ├── ledger.json           # Local JSON data
-├── pyproject.toml        # Poetry config
-├── README.md             # ← You're here
+├── pyproject.toml        # Poetry configuration
+├── README.md             # You're here
 └── LICENSE
-```
 
+```
 ---
 
-### 🧠 NLP Support
+Natural Language Support
 
-Supports inputs like:
+Log expenses conversationally:
 
-```
+bash```
 ledger say "Paid for transport 700"
 ```
 
-Automatically parses:
+QuickLedger will automatically extract:
 
-* Expense: `transport`
-* Amount: `700`
-* Date: `today` (by default)
+Expense: transport
+
+Amount: 700
+
+Date: today (default)
+
+
 
 ---
 
-### 📃 License
+License
 
 MIT © 2025 Chinyere Unamba
-
----
