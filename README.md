@@ -150,7 +150,7 @@ ledger/
 │   │   └── __init__.py
 │   └── models.py
 ├── ledger.json           # Local JSON storage
-|--- main.py
+├── main.py
 ├── pyproject.toml        # Poetry config
 ├── README.md             # ← You're here
 └── LICENSE
