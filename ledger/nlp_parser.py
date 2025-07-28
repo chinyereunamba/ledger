@@ -21,6 +21,7 @@ def parse_natural_expenses(input_text: str) -> List[Dict[str, Any]]:
     - "Paid transport 800, airtime 300"
     - "Spent ₦200 on coffee and ₦150 on snacks"
     - "Food 1200, transport 500, airtime 300"
+    - "I spent 300 on fish"
     """
     expenses = []
     
@@ -30,42 +31,100 @@ def parse_natural_expenses(input_text: str) -> List[Dict[str, Any]]:
     # Remove common currency symbols and normalize
     text = re.sub(r'[₦$£€]', '', text)
     
-    # Pattern 1: "item for amount" or "item amount"
-    # Matches: "airtime for 500", "lunch 1500", "transport for 800"
-    pattern1 = r'(\w+(?:\s+\w+)*?)(?:\s+for\s+|\s+)(\d+(?:\.\d+)?)'
-    matches1 = re.findall(pattern1, text)
+    # Pattern 1: "amount on item" (highest priority)
+    # Matches: "300 on fish", "200 on coffee", "150 on snacks"
+    pattern_on = r'(\d+(?:\.\d+)?)\s+on\s+(\w+(?:\s+\w+)*?)(?=\s+and\s+|\s*,|\s*$)'
+    matches_on = re.findall(pattern_on, text)
     
-    for match in matches1:
-        expense_name = match[0].strip()
-        amount = float(match[1])
-        
-        # Skip if it's just a number or common words
-        if expense_name and not expense_name.isdigit() and expense_name not in ['for', 'and', 'paid', 'bought', 'spent']:
-            expenses.append({
-                "expense": expense_name,
-                "amount": amount
-            })
-    
-    # Pattern 2: "amount on item" 
-    # Matches: "200 on coffee", "150 on snacks"
-    pattern2 = r'(\d+(?:\.\d+)?)\s+on\s+(\w+(?:\s+\w+)*?)'
-    matches2 = re.findall(pattern2, text)
-    
-    for match in matches2:
+    for match in matches_on:
         amount = float(match[0])
         expense_name = match[1].strip()
         
-        if expense_name and not expense_name.isdigit():
+        if _is_valid_expense_name(expense_name):
             expenses.append({
                 "expense": expense_name,
                 "amount": amount
             })
     
-    # If no patterns matched, try a more flexible approach
+    # Pattern 2: "item for amount" 
+    # Matches: "airtime for 500", "lunch for 1500"
+    if not expenses:  # Only try if "on" pattern didn't work
+        pattern_for = r'(\w+(?:\s+\w+)*?)\s+for\s+(\d+(?:\.\d+)?)(?=\s+and\s+|\s*,|\s*$)'
+        matches_for = re.findall(pattern_for, text)
+        
+        for match in matches_for:
+            expense_name = match[0].strip()
+            amount = float(match[1])
+            
+            if _is_valid_expense_name(expense_name):
+                expenses.append({
+                    "expense": expense_name,
+                    "amount": amount
+                })
+    
+    # Pattern 3: Comma-separated "item amount" pairs
+    # Split by commas and "and" first, then parse each part
+    if not expenses:
+        # Split the text into parts
+        parts = re.split(r'\s*,\s*|\s+and\s+', text)
+        
+        for part in parts:
+            part = part.strip()
+            if not part:
+                continue
+                
+            # Look for "item amount" in each part
+            match = re.search(r'(\w+(?:\s+\w+)*?)\s+(\d+(?:\.\d+)?)$', part)
+            if match:
+                expense_name = match.group(1).strip()
+                amount = float(match.group(2))
+                
+                if _is_valid_expense_name(expense_name):
+                    expenses.append({
+                        "expense": expense_name,
+                        "amount": amount
+                    })
+    
+    # If still no patterns matched, try fallback parsing
     if not expenses:
         expenses = _fallback_parsing(text)
     
     return expenses
+
+def _is_valid_expense_name(name: str) -> bool:
+    """
+    Check if a name is a valid expense name (not a common phrase or stop word).
+    """
+    name = name.lower().strip()
+    
+    # Skip empty or numeric names
+    if not name or name.isdigit():
+        return False
+    
+    # Common phrases and stop words to ignore
+    stop_phrases = {
+        'i', 'i spent', 'spent', 'paid', 'bought', 'purchase', 'purchased',
+        'for', 'and', 'the', 'a', 'an', 'on', 'with', 'to', 'from',
+        'my', 'me', 'we', 'us', 'our', 'this', 'that', 'these', 'those',
+        'was', 'were', 'is', 'are', 'am', 'be', 'been', 'being',
+        'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would',
+        'could', 'should', 'may', 'might', 'can', 'must', 'shall'
+    }
+    
+    # Check if the entire name is a stop phrase
+    if name in stop_phrases:
+        return False
+    
+    # Check if it starts with common stop phrases
+    for phrase in ['i spent', 'i paid', 'i bought', 'we spent', 'we paid']:
+        if name.startswith(phrase):
+            return False
+    
+    # Must be at least 2 characters and contain at least one letter
+    if len(name) < 2 or not any(c.isalpha() for c in name):
+        return False
+    
+    return True
 
 def _fallback_parsing(text: str) -> List[Dict[str, Any]]:
     """
@@ -92,12 +151,8 @@ def _fallback_parsing(text: str) -> List[Dict[str, Any]]:
                 expense_name = match[0].strip()
                 amount = float(match[1])
             
-            # Filter out common words and ensure valid expense name
-            skip_words = {'for', 'and', 'paid', 'bought', 'spent', 'on', 'the', 'a', 'an'}
-            if (expense_name.lower() not in skip_words and 
-                len(expense_name) > 1 and 
-                not expense_name.isdigit()):
-                
+            # Use the same validation function
+            if _is_valid_expense_name(expense_name):
                 expenses.append({
                     "expense": expense_name,
                     "amount": amount
