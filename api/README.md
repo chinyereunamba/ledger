@@ -18,16 +18,6 @@ pip install -r requirements.txt
 fastapi dev main.py
 ```
 
-### Alternative Ways to Run
-
-```bash
-# Using the run script
-python run.py
-
-# Direct uvicorn
-uvicorn main:app --reload
-```
-
 The API will be available at `http://localhost:8000`
 
 ### Interactive Documentation
@@ -47,16 +37,32 @@ Content-Type: application/json
 
 {
   "expense": "Coffee",
+  "amount": 5.50
+  // date is optional - defaults to current date
+}
+```
+
+**With specific date (optional):**
+
+```http
+POST /expenses
+Content-Type: application/json
+
+{
+  "expense": "Coffee",
   "amount": 5.50,
-  "date": "2025-07-28"  // Optional, defaults to today
+  "date": "2025-07-28"  // Optional: YYYY-MM-DD format
 }
 ```
 
 #### Get Expenses
 
 ```http
-# Get all expenses
+# Get all expenses (paginated)
 GET /expenses
+
+# Get expenses with pagination
+GET /expenses?limit=20&offset=0
 
 # Get expenses for specific date
 GET /expenses?date=2025-07-28
@@ -66,7 +72,15 @@ GET /expenses?week=true
 
 # Get expenses for date range
 GET /expenses?range=2025-07-01,2025-07-31
+
+# Combine filters with pagination
+GET /expenses?week=true&limit=10&offset=0
 ```
+
+**Pagination Parameters:**
+
+- `limit`: Number of expenses to return (1-1000, default: 50)
+- `offset`: Number of expenses to skip (default: 0)
 
 #### Edit Expense
 
@@ -186,7 +200,6 @@ Returns comprehensive analytics including:
 ```
 api/
 ├── main.py             # Main FastAPI application entry point
-├── app.py              # Legacy app file (use main.py instead)
 ├── models.py           # Pydantic models for validation
 ├── utils.py            # Utility functions
 ├── routes/
@@ -194,7 +207,6 @@ api/
 │   ├── expenses.py     # Expense management endpoints
 │   ├── analytics.py    # Analytics and summary endpoints
 │   └── utility.py      # Health check and info endpoints
-├── run.py              # Alternative server startup script
 ├── requirements.txt    # Python dependencies
 └── README.md          # This file
 ```
@@ -218,10 +230,15 @@ The API uses the same `~/.ledger/` directory structure as the CLI application, e
 # Start development server (recommended)
 fastapi dev main.py
 
-# Add an expense via curl
+# Add an expense (uses current date)
 curl -X POST "http://localhost:8000/expenses" \
   -H "Content-Type: application/json" \
   -d '{"expense": "Coffee", "amount": 5.50}'
+
+# Add an expense with specific date
+curl -X POST "http://localhost:8000/expenses" \
+  -H "Content-Type: application/json" \
+  -d '{"expense": "Lunch", "amount": 12.50, "date": "2025-07-28"}'
 
 # Get all expenses
 curl "http://localhost:8000/expenses"

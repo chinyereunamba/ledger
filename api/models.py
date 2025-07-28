@@ -19,6 +19,14 @@ class ExpenseResponse(BaseModel):
     amount: float
     index: int
 
+class PaginatedExpensesResponse(BaseModel):
+    expenses: List[ExpenseResponse]
+    total: int
+    limit: int
+    offset: int
+    has_more: bool
+    returned: int
+
 class SummaryResponse(BaseModel):
     total: float
     expenses: List[Dict[str, Any]]

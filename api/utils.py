@@ -98,3 +98,22 @@ def calculate_summary_stats(data: Dict, period_description: str) -> Dict:
         "transaction_count": transaction_count,
         "days_with_expenses": days_with_expenses
     }
+
+def paginate_expenses(expenses: List, limit: int, offset: int) -> Dict:
+    """Apply pagination to a list of expenses"""
+    total = len(expenses)
+    start_idx = offset
+    end_idx = offset + limit
+    
+    # Apply pagination
+    paginated_expenses = expenses[start_idx:end_idx]
+    has_more = end_idx < total
+    
+    return {
+        "expenses": paginated_expenses,
+        "total": total,
+        "limit": limit,
+        "offset": offset,
+        "has_more": has_more,
+        "returned": len(paginated_expenses)
+    }

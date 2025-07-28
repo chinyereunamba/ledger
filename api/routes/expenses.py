@@ -6,7 +6,7 @@ from typing import Optional, List, Dict, Any
 from datetime import datetime
 import json
 
-from models import ExpenseCreate, ExpenseUpdate, ExpenseResponse
+from models import ExpenseCreate, ExpenseUpdate, ExpenseResponse, PaginatedExpensesResponse
 from utils import (
     load_ledger_data, format_expenses_response, validate_date_format,
     filter_data_by_date, filter_data_by_week, filter_data_by_range,
@@ -68,18 +68,26 @@ async def create_expense(expense_data: ExpenseCreate):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error adding expense: {str(e)}")
 
-@router.get("", response_model=List[ExpenseResponse])
+@router.get("", response_model=PaginatedExpensesResponse)
 async def get_expenses(
     date: Optional[str] = Query(None, description="Specific date (YYYY-MM-DD)"),
     week: Optional[bool] = Query(False, description="Get expenses for current week"),
-    range: Optional[str] = Query(None, description="Date range (start_date,end_date)")
+    range: Optional[str] = Query(None, description="Date range (start_date,end_date)"),
+    limit: int = Query(50, ge=1, le=1000, description="Number of expenses to return (1-1000)"),
+    offset: int = Query(0, ge=0, description="Number of expenses to skip")
 ):
-    """Get expenses with optional filtering"""
+    """Get expenses with optional filtering and pagination"""
     try:
         data = load_ledger_data()
         
         if not data:
-            return []
+            return {
+                "expenses": [],
+                "total": 0,
+                "limit": limit,
+                "offset": offset,
+                "has_more": False
+            }
         
         # Filter by date
         if date:
@@ -103,7 +111,27 @@ async def get_expenses(
         else:
             filtered_data = data
         
-        return format_expenses_response(filtered_data)
+        # Get all expenses and sort by date (newest first)
+        all_expenses = format_expenses_response(filtered_data)
+        all_expenses.sort(key=lambda x: x.date, reverse=True)
+        
+        # Calculate pagination
+        total = len(all_expenses)
+        start_idx = offset
+        end_idx = offset + limit
+        
+        # Apply pagination
+        paginated_expenses = all_expenses[start_idx:end_idx]
+        has_more = end_idx < total
+        
+        return {
+            "expenses": [expense.dict() for expense in paginated_expenses],
+            "total": total,
+            "limit": limit,
+            "offset": offset,
+            "has_more": has_more,
+            "returned": len(paginated_expenses)
+        }
     
     except HTTPException:
         raise
