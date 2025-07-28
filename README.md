@@ -25,7 +25,7 @@ A fast, intuitive, **CLI-first expense tracker** built with Python & Typer — t
 
 ```bash
 git clone https://github.com/yourusername/quickledger.git
-cd quickledger
+cd ledger
 ```
 
 #### 2. Install dependencies
@@ -130,7 +130,7 @@ quickledger/
 Supports inputs like:
 
 ```
-ledger add "Paid for transport 700"
+ledger say "Paid for transport 700"
 ```
 
 Automatically parses:
