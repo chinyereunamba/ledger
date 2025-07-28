@@ -15,10 +15,12 @@ LEDGER_DIR = Path.home() / ".ledger"
 LEDGER = LEDGER_DIR / "ledger.json"
 BACKUP_DIR = LEDGER_DIR / "backups"
 
+
 def ensure_ledger_directory():
     """Create ledger directory and subdirectories if they don't exist."""
     LEDGER_DIR.mkdir(exist_ok=True)
     BACKUP_DIR.mkdir(exist_ok=True)
+
 
 def create_backup():
     """Create a backup of the current ledger file."""
@@ -27,13 +29,13 @@ def create_backup():
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         backup_file = BACKUP_DIR / f"ledger_backup_{timestamp}.json"
         shutil.copy2(LEDGER, backup_file)
-        
+
         # Keep only the last 10 backups
         backups = sorted(BACKUP_DIR.glob("ledger_backup_*.json"))
         if len(backups) > 10:
             for old_backup in backups[:-10]:
                 old_backup.unlink()
-        
+
         return backup_file
     return None
 
@@ -41,14 +43,14 @@ def create_backup():
 def load_ledger(mode: str):
     """Load ledger file with auto-creation and backup support."""
     ensure_ledger_directory()
-    
+
     try:
         if mode == "w" and LEDGER.exists():
             # Create backup before writing
             backup_file = create_backup()
             if backup_file:
                 print(f"[dim]Backup created: {backup_file.name}[/dim]")
-        
+
         return open(LEDGER, mode)
     except FileNotFoundError:
         if mode == "r":
@@ -65,7 +67,7 @@ def add_expense(expense: Optional[str], amount: Optional[float]):
         "expense": expense,
         "amount": amount,
     }
-    # Try to load existing data
+
     f = load_ledger("r")
     data = json.load(f)
 
@@ -98,7 +100,8 @@ def get_summary_by_date(date: str):
     if date in data:
         for expense in data[date]:
             total += int(expense["amount"])
-            table.add_row(str(expense["expense"]).title(), str(expense["amount"]))
+            table.add_row(
+                str(expense["expense"]).title(), str(expense["amount"]))
 
         table.add_row("Total", f"{total:,}")
 
@@ -122,7 +125,7 @@ def view_range(start_date, end_date):
     """
     View expenses within a specific date range.
     Usage: ledger view --start 2025-07-01 --end 2025-07-20
-    
+
     Args:
         start_date (str): Start date in YYYY-MM-DD format
         end_date (str): End date in YYYY-MM-DD format
@@ -154,55 +157,60 @@ def view_range(start_date, end_date):
     total = 0
     filtered_data = {}
     transaction_count = 0
-    
-    # Filter by date range
+
     for date, expenses in data.items():
         if start_date <= date <= end_date:
             filtered_data[date] = expenses
             transaction_count += len(expenses)
 
     if not filtered_data:
-        print(f"[yellow]No expenses found between {start_date} and {end_date}.[/yellow]")
+        print(
+            f"[yellow]No expenses found between {start_date} and {end_date}.[/yellow]")
         return
 
     # Calculate some quick stats
     daily_totals = {}
     category_totals = {}
-    
+
     for date, expenses in filtered_data.items():
         daily_total = 0
         for expense in expenses:
             amount = float(expense["amount"])
             daily_total += amount
             total += amount
-            
+
             # Categorize expense
             category = get_expense_category(expense["expense"])
             if category not in category_totals:
                 category_totals[category] = 0
             category_totals[category] += amount
-            
+
         daily_totals[date] = daily_total
 
     # Display header with range info
-    print(f"\n[bold blue]📅 Expenses from {start_date} to {end_date}[/bold blue]")
+    print(
+        f"\n[bold blue]📅 Expenses from {start_date} to {end_date}[/bold blue]")
     print("=" * 60)
-    
+
     # Quick stats
     days_with_expenses = len(filtered_data)
     avg_daily = total / days_with_expenses if days_with_expenses > 0 else 0
-    max_day = max(daily_totals.items(), key=lambda x: x[1]) if daily_totals else ("", 0)
-    top_category = max(category_totals.items(), key=lambda x: x[1]) if category_totals else ("", 0)
-    
+    max_day = max(daily_totals.items(),
+                  key=lambda x: x[1]) if daily_totals else ("", 0)
+    top_category = max(category_totals.items(),
+                       key=lambda x: x[1]) if category_totals else ("", 0)
+
     stats_table = Table("Metric", "Value", title="📊 Range Summary")
     stats_table.add_row("Total Spent", f"₦{total:,.2f}")
     stats_table.add_row("Days with Expenses", str(days_with_expenses))
     stats_table.add_row("Total Transactions", str(transaction_count))
     stats_table.add_row("Average per Day", f"₦{avg_daily:,.2f}")
-    stats_table.add_row("Highest Spending Day", f"{max_day[0]} (₦{max_day[1]:,.2f})")
-    stats_table.add_row("Top Category", f"{top_category[0].title()} (₦{top_category[1]:,.2f})")
+    stats_table.add_row("Highest Spending Day",
+                        f"{max_day[0]} (₦{max_day[1]:,.2f})")
+    stats_table.add_row(
+        "Top Category", f"{top_category[0].title()} (₦{top_category[1]:,.2f})")
     console.print(stats_table)
-    
+
     # Detailed expenses table
     print(f"\n[bold green]💰 Detailed Expenses[/bold green]")
     expenses_table = Table("Date", "Expense", "Amount", "Category")
@@ -212,9 +220,9 @@ def view_range(start_date, end_date):
         for expense in expenses:
             category = get_expense_category(expense["expense"])
             expenses_table.add_row(
-                date, 
-                expense["expense"], 
-                f"₦{expense['amount']}", 
+                date,
+                expense["expense"],
+                f"₦{expense['amount']}",
                 category.title()
             )
 
@@ -225,7 +233,7 @@ def view_range(start_date, end_date):
         ""
     )
     console.print(expenses_table)
-    
+
     return {
         'total': total,
         'days_with_expenses': days_with_expenses,
@@ -256,16 +264,16 @@ def get_summary(start_date=None, end_date=None):
 
     total = 0
     filtered_data = {}
-    
+
     # Filter by date range if provided
     for date, expenses in data.items():
         include_date = True
-        
+
         if start_date and date < start_date:
             include_date = False
         if end_date and date > end_date:
             include_date = False
-            
+
         if include_date:
             filtered_data[date] = expenses
 
@@ -279,9 +287,9 @@ def get_summary(start_date=None, end_date=None):
         title = f"Summary from {start_date or 'beginning'} to {end_date or 'now'}"
     else:
         title = "All-Time Summary"
-    
+
     print(f"\n[bold blue]{title}[/bold blue]")
-    
+
     table = Table("Date", "Expense", "Amount")
 
     for date, expenses in sorted(filtered_data.items()):
@@ -305,10 +313,11 @@ def all_time():
 
 CATEGORIES_FILE = LEDGER_DIR / "categories.json"
 
+
 def load_categories():
     """Load expense categories from file"""
     ensure_ledger_directory()
-    
+
     try:
         with open(CATEGORIES_FILE, "r") as f:
             return json.load(f)
@@ -327,29 +336,32 @@ def load_categories():
         save_categories(default_categories)
         return default_categories
 
+
 def save_categories(categories):
     """Save categories to file with backup"""
     ensure_ledger_directory()
-    
+
     # Create backup if file exists
     if CATEGORIES_FILE.exists():
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         backup_file = BACKUP_DIR / f"categories_backup_{timestamp}.json"
         shutil.copy2(CATEGORIES_FILE, backup_file)
-    
+
     with open(CATEGORIES_FILE, "w") as f:
         json.dump(categories, f, indent=2)
+
 
 def get_expense_category(expense_name):
     """Determine category for an expense based on keywords"""
     categories = load_categories()
     expense_lower = expense_name.lower()
-    
+
     for category, keywords in categories.items():
         if any(keyword in expense_lower for keyword in keywords):
             return category
-    
+
     return "miscellaneous"
+
 
 def manage_categories(action=None, category=None, keywords=None):
     """
@@ -360,53 +372,57 @@ def manage_categories(action=None, category=None, keywords=None):
         keywords: list of keywords for the category
     """
     categories = load_categories()
-    
+
     if action == "list" or action is None:
         print("\n[bold blue]📂 Expense Categories[/bold blue]")
         table = Table("Category", "Keywords")
         for cat, words in categories.items():
-            keywords_str = ", ".join(words) if words else "[dim]No keywords[/dim]"
+            keywords_str = ", ".join(
+                words) if words else "[dim]No keywords[/dim]"
             table.add_row(cat.title(), keywords_str)
         console.print(table)
-        
+
     elif action == "add":
         if not category:
             print("[red]Category name required for add action[/red]")
             return
-        
+
         if category in categories:
             print(f"[yellow]Category '{category}' already exists[/yellow]")
             return
-            
+
         categories[category] = keywords or []
         save_categories(categories)
-        print(f"[green]Added category '{category}' with keywords: {keywords or 'none'}[/green]")
-        
+        print(
+            f"[green]Added category '{category}' with keywords: {keywords or 'none'}[/green]")
+
     elif action == "remove":
         if not category:
             print("[red]Category name required for remove action[/red]")
             return
-            
+
         if category not in categories:
             print(f"[yellow]Category '{category}' not found[/yellow]")
             return
-            
+
         del categories[category]
         save_categories(categories)
         print(f"[green]Removed category '{category}'[/green]")
-        
+
     elif action == "update":
         if not category:
             print("[red]Category name required for update action[/red]")
             return
-            
+
         if category not in categories:
             print(f"[yellow]Category '{category}' not found[/yellow]")
             return
-            
+
         categories[category] = keywords or []
         save_categories(categories)
-        print(f"[green]Updated category '{category}' with keywords: {keywords or 'none'}[/green]")
+        print(
+            f"[green]Updated category '{category}' with keywords: {keywords or 'none'}[/green]")
+
 
 def get_category_summary():
     """Show expenses grouped by categories"""
@@ -422,7 +438,7 @@ def get_category_summary():
         return
 
     category_totals = {}
-    
+
     # Categorize all expenses
     for date, expenses in data.items():
         for expense in expenses:
@@ -430,14 +446,15 @@ def get_category_summary():
             if category not in category_totals:
                 category_totals[category] = 0
             category_totals[category] += float(expense["amount"])
-    
+
     # Sort by amount
-    sorted_categories = sorted(category_totals.items(), key=lambda x: x[1], reverse=True)
+    sorted_categories = sorted(
+        category_totals.items(), key=lambda x: x[1], reverse=True)
     total_spent = sum(category_totals.values())
-    
+
     print("\n[bold blue]💰 Spending by Category[/bold blue]")
     table = Table("Category", "Amount", "Percentage")
-    
+
     for category, amount in sorted_categories:
         percentage = (amount / total_spent) * 100 if total_spent > 0 else 0
         table.add_row(
@@ -445,13 +462,13 @@ def get_category_summary():
             f"₦{amount:,.2f}",
             f"{percentage:.1f}%"
         )
-    
+
     table.add_row(
         "[bold]Total[/bold]",
         f"[bold]₦{total_spent:,.2f}[/bold]",
         "[bold]100.0%[/bold]"
     )
-    
+
     console.print(table)
     return category_totals
 
@@ -483,7 +500,7 @@ def json_to_csv(output_file=None):
 
     # Convert to a DataFrame
     df = pd.DataFrame(flattened_data)
-    
+
     # Generate filename if not provided
     if not output_file:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -491,7 +508,7 @@ def json_to_csv(output_file=None):
 
     # Write the DataFrame to a CSV file
     df.to_csv(output_file, encoding="utf-8", index=False)
-    
+
     # Show summary
     total_amount = df['Amount'].astype(float).sum()
     print(f"✅ Exported {len(df)} transactions to {output_file}")
@@ -501,16 +518,18 @@ def json_to_csv(output_file=None):
 def show_backups():
     """Display available backup files."""
     ensure_ledger_directory()
-    
-    ledger_backups = sorted(BACKUP_DIR.glob("ledger_backup_*.json"), reverse=True)
-    category_backups = sorted(BACKUP_DIR.glob("categories_backup_*.json"), reverse=True)
-    
+
+    ledger_backups = sorted(BACKUP_DIR.glob(
+        "ledger_backup_*.json"), reverse=True)
+    category_backups = sorted(BACKUP_DIR.glob(
+        "categories_backup_*.json"), reverse=True)
+
     if not ledger_backups and not category_backups:
         print("[yellow]No backup files found.[/yellow]")
         return
-    
+
     print("\n[bold blue]📁 Available Backups[/bold blue]")
-    
+
     if ledger_backups:
         print("\n[bold green]Ledger Backups:[/bold green]")
         table = Table("File", "Date Created", "Size")
@@ -518,9 +537,10 @@ def show_backups():
             stat = backup.stat()
             created = datetime.fromtimestamp(stat.st_mtime)
             size = f"{stat.st_size} bytes"
-            table.add_row(backup.name, created.strftime("%Y-%m-%d %H:%M:%S"), size)
+            table.add_row(backup.name, created.strftime(
+                "%Y-%m-%d %H:%M:%S"), size)
         console.print(table)
-    
+
     if category_backups:
         print("\n[bold yellow]Category Backups:[/bold yellow]")
         table = Table("File", "Date Created", "Size")
@@ -528,41 +548,42 @@ def show_backups():
             stat = backup.stat()
             created = datetime.fromtimestamp(stat.st_mtime)
             size = f"{stat.st_size} bytes"
-            table.add_row(backup.name, created.strftime("%Y-%m-%d %H:%M:%S"), size)
+            table.add_row(backup.name, created.strftime(
+                "%Y-%m-%d %H:%M:%S"), size)
         console.print(table)
-    
+
     print(f"\n[dim]Backup location: {BACKUP_DIR}[/dim]")
 
 
 def get_ledger_info():
     """Display information about the ledger setup."""
     ensure_ledger_directory()
-    
+
     print("\n[bold blue]📋 Ledger Information[/bold blue]")
-    
+
     info_table = Table("Setting", "Value")
     info_table.add_row("Ledger Directory", str(LEDGER_DIR))
     info_table.add_row("Ledger File", str(LEDGER))
     info_table.add_row("Categories File", str(CATEGORIES_FILE))
     info_table.add_row("Backup Directory", str(BACKUP_DIR))
-    
+
     # File existence and sizes
     if LEDGER.exists():
         size = LEDGER.stat().st_size
         info_table.add_row("Ledger Size", f"{size} bytes")
     else:
         info_table.add_row("Ledger Status", "[red]Not created yet[/red]")
-    
+
     if CATEGORIES_FILE.exists():
         size = CATEGORIES_FILE.stat().st_size
         info_table.add_row("Categories Size", f"{size} bytes")
     else:
         info_table.add_row("Categories Status", "[red]Not created yet[/red]")
-    
+
     # Count backups
     backup_count = len(list(BACKUP_DIR.glob("*.json")))
     info_table.add_row("Backup Files", str(backup_count))
-    
+
     console.print(info_table)
 
 
@@ -584,7 +605,7 @@ def get_stats():
     # Flatten data for analysis
     records = []
     category_totals = {}
-    
+
     for date, expenses in data.items():
         for item in expenses:
             records.append({
@@ -592,7 +613,7 @@ def get_stats():
                 "expense": item["expense"],
                 "amount": float(item["amount"])
             })
-            
+
             # Calculate category totals
             category = get_expense_category(item["expense"])
             if category not in category_totals:
@@ -600,36 +621,40 @@ def get_stats():
             category_totals[category] += float(item["amount"])
 
     df = pd.DataFrame(records)
-    
+
     # Convert date strings to datetime for better analysis
     df['date'] = pd.to_datetime(df['date'])
-    
+
     # Calculate key statistics
     total_spent = df['amount'].sum()
     total_days = (df['date'].max() - df['date'].min()).days + 1
     avg_daily = total_spent / total_days if total_days > 0 else 0
-    
+
     # Daily spending totals
     daily_spending = df.groupby('date')['amount'].sum()
     most_expensive_day = daily_spending.idxmax()
     most_expensive_amount = daily_spending.max()
-    
+
     # Top category
     top_category = max(category_totals.items(), key=lambda x: x[1])
-    
+
     # Top individual expenses
-    top_expenses = df.groupby('expense')['amount'].sum().sort_values(ascending=False)
-    
+    top_expenses = df.groupby(
+        'expense')['amount'].sum().sort_values(ascending=False)
+
     print("\n[bold blue]📊 Ledger Statistics[/bold blue]")
     print("=" * 50)
-    
+
     # Key Highlights
-    highlights_table = Table("Key Metric", "Value", title="📈 Key Highlights", title_style="bold magenta")
+    highlights_table = Table(
+        "Key Metric", "Value", title="📈 Key Highlights", title_style="bold magenta")
     highlights_table.add_row("💰 Average Daily Spending", f"₦{avg_daily:,.2f}")
-    highlights_table.add_row("🏆 Top Category", f"{top_category[0].title()} (₦{top_category[1]:,.2f})")
-    highlights_table.add_row("📅 Most Expensive Day", f"{most_expensive_day.strftime('%Y-%m-%d')} (₦{most_expensive_amount:,.2f})")
+    highlights_table.add_row(
+        "🏆 Top Category", f"{top_category[0].title()} (₦{top_category[1]:,.2f})")
+    highlights_table.add_row(
+        "📅 Most Expensive Day", f"{most_expensive_day.strftime('%Y-%m-%d')} (₦{most_expensive_amount:,.2f})")
     console.print(highlights_table)
-    
+
     # Overview stats
     overview_table = Table("Metric", "Value", title="📋 Overview")
     overview_table.add_row("Total Spent", f"₦{total_spent:,.2f}")
@@ -637,23 +662,25 @@ def get_stats():
     overview_table.add_row("Total Transactions", str(len(df)))
     overview_table.add_row("Days with Expenses", str(len(daily_spending)))
     console.print(overview_table)
-    
+
     # Top 5 expense categories by spending
     print("\n[bold green]🏷️ Top 5 Categories[/bold green]")
-    top_categories = sorted(category_totals.items(), key=lambda x: x[1], reverse=True)[:5]
+    top_categories = sorted(category_totals.items(),
+                            key=lambda x: x[1], reverse=True)[:5]
     cat_table = Table("Category", "Total Amount", "Percentage")
     for category, amount in top_categories:
         percentage = (amount / total_spent) * 100
-        cat_table.add_row(category.title(), f"₦{amount:,.2f}", f"{percentage:.1f}%")
+        cat_table.add_row(category.title(),
+                          f"₦{amount:,.2f}", f"{percentage:.1f}%")
     console.print(cat_table)
-    
+
     # Top 5 individual expenses
     print("\n[bold yellow]💸 Top 5 Individual Expenses[/bold yellow]")
     expense_table = Table("Expense", "Total Amount")
     for expense, amount in top_expenses.head(5).items():
         expense_table.add_row(expense.title(), f"₦{amount:,.2f}")
     console.print(expense_table)
-    
+
     return {
         'avg_daily_spending': avg_daily,
         'top_category': top_category,
@@ -719,11 +746,11 @@ def edit_expense(date, index_or_expense_name, new_expense=None, new_amount=None)
     try:
         f = load_ledger("w")
         json.dump(data, f, indent=2)
-        
+
         # Show what was changed
         updated_expense = data[date][expense_index]["expense"]
         updated_amount = data[date][expense_index]["amount"]
-        
+
         print(f"[green]Updated expense:[/green]")
         print(f"  From: {original_expense} ₦{original_amount}")
         print(f"  To:   {updated_expense} ₦{updated_amount}")

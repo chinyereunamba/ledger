@@ -48,7 +48,7 @@ def parse_natural_expenses(input_text: str) -> List[Dict[str, Any]]:
     
     # Pattern 2: "item for amount" 
     # Matches: "airtime for 500", "lunch for 1500"
-    if not expenses:  # Only try if "on" pattern didn't work
+    if not expenses:  
         pattern_for = r'(\w+(?:\s+\w+)*?)\s+for\s+(\d+(?:\.\d+)?)(?=\s+and\s+|\s*,|\s*$)'
         matches_for = re.findall(pattern_for, text)
         
@@ -65,7 +65,7 @@ def parse_natural_expenses(input_text: str) -> List[Dict[str, Any]]:
     # Pattern 3: Comma-separated "item amount" pairs
     # Split by commas and "and" first, then parse each part
     if not expenses:
-        # Split the text into parts
+        
         parts = re.split(r'\s*,\s*|\s+and\s+', text)
         
         for part in parts:
@@ -136,8 +136,8 @@ def _fallback_parsing(text: str) -> List[Dict[str, Any]]:
     # Find all numbers and nearby words
     # Pattern: word(s) followed by number, or number followed by word(s)
     patterns = [
-        r'(\w+(?:\s+\w+)*?)\s+(\d+(?:\.\d+)?)',  # word(s) number
-        r'(\d+(?:\.\d+)?)\s+(\w+(?:\s+\w+)*?)',  # number word(s)
+        r'(\w+(?:\s+\w+)*?)\s+(\d+(?:\.\d+)?)', 
+        r'(\d+(?:\.\d+)?)\s+(\w+(?:\s+\w+)*?)',  
     ]
     
     for pattern in patterns:
@@ -201,7 +201,7 @@ def parse_and_enhance(input_text: str) -> List[Dict[str, Any]]:
 # Test examples
 if __name__ == "__main__":
     test_inputs = [
-        "I spent 300 on fish",  # This should only return fish, not "I spent"
+        "I spent 300 on fish",  
         "Bought airtime for 500 and lunch for 1500",
         "Paid transport 800, airtime 300",
         "Spent ₦200 on coffee and ₦150 on snacks",

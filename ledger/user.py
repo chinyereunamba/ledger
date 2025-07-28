@@ -11,7 +11,6 @@ def create(username: str = None, password: str = None):
         'password': password
     }
 
-
     with open("../user.json", 'w+') as f:
         if f.read() == '':
             data = json.dump(user, f, indent=2)
@@ -21,8 +20,6 @@ def create(username: str = None, password: str = None):
             return 0
 
     print('Created user successfully')
-        
-        
 
 
 def get_user():
@@ -34,9 +31,10 @@ def get_user():
         else:
             print("User exists")
 
+
 def delete_user():
     with open("../user.json", "w+") as f:
         f.flush()
         f.write('{}')
-        
+
         print("User deleted successfully")

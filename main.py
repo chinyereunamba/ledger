@@ -10,6 +10,7 @@ from typing import Optional
 from rich import print
 from datetime import datetime
 from ledger.user import delete_user, get_user
+import json
 
 
 app = typer.Typer(rich_markup_mode='rich')
