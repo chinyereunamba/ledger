@@ -201,6 +201,7 @@ def parse_and_enhance(input_text: str) -> List[Dict[str, Any]]:
 # Test examples
 if __name__ == "__main__":
     test_inputs = [
+        "I spent 300 on fish",  # This should only return fish, not "I spent"
         "Bought airtime for 500 and lunch for 1500",
         "Paid transport 800, airtime 300",
         "Spent ₦200 on coffee and ₦150 on snacks",
@@ -213,3 +214,8 @@ if __name__ == "__main__":
         print(f"\nInput: {test_input}")
         result = parse_and_enhance(test_input)
         print(f"Parsed: {result}")
+        if test_input == "I spent 300 on fish":
+            if len(result) == 1 and result[0]['expense'].lower() == 'fish':
+                print("✅ FISH TEST PASSED")
+            else:
+                print("❌ FISH TEST FAILED")
