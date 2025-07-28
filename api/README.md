@@ -100,6 +100,30 @@ Content-Type: application/json
 DELETE /expenses/2025-07-28/0
 ```
 
+### 🧠 Natural Language Processing
+
+#### Parse Natural Language
+
+```http
+POST /nlp/parse
+Content-Type: application/json
+
+{
+  "text": "Bought airtime for 500 and lunch for 1500"
+}
+```
+
+#### Add Expenses via Natural Language
+
+```http
+POST /nlp/say
+Content-Type: application/json
+
+{
+  "text": "Paid transport 800, airtime 300"
+}
+```
+
 ### 📊 Summaries & Analytics
 
 #### Get Summary

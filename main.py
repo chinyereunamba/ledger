@@ -4,6 +4,7 @@ from ledger.ledger import (
     delete_expense, manage_categories, get_category_summary, view_range,
     show_backups, get_ledger_info, LEDGER
 )
+from ledger.nlp_parser import parse_and_enhance
 import typer
 from typing import Optional
 from rich import print
@@ -155,6 +156,7 @@ def main(ctx: typer.Context):
         
         print("🧾 [bold]Core Commands:[/bold]")
         print("  • [cyan]add[/cyan]        - Add a new expense")
+        print("  • [cyan]say[/cyan]        - Add expenses using natural language")
         print("  • [cyan]view[/cyan]       - View expenses by date/range")
         print("  • [cyan]edit[/cyan]       - Edit existing expenses")
         print("  • [cyan]delete[/cyan]     - Delete specific expenses")
@@ -169,6 +171,7 @@ def main(ctx: typer.Context):
         
         print("� [bold]Quick Examples:[/bold]")
         print("  [dim]ledger add \"Coffee\" 5.50[/dim]")
+        print("  [dim]ledger say \"Bought airtime for 500 and lunch for 1500\"[/dim]")
         print("  [dim]ledger view --start 2025-07-01 --end 2025-07-20[/dim]")
         print("  [dim]ledger stats[/dim]")
         print("  [dim]ledger categories summary[/dim]\n")
@@ -288,6 +291,43 @@ def backups():
 def info():
     """Show ledger configuration and file information."""
     get_ledger_info()
+
+
+@app.command()
+def say(input_text: str = typer.Argument(..., help="Natural language expense input")):
+    """
+    Add expenses using natural language.
+    
+    Examples:
+        ledger say "Bought airtime for 500 and lunch for 1500"
+        ledger say "Paid transport 800, airtime 300"
+        ledger say "Spent 200 on coffee and 150 on snacks"
+    """
+    try:
+        # Parse the natural language input
+        parsed_expenses = parse_and_enhance(input_text)
+        
+        if not parsed_expenses:
+            print("[yellow]Could not parse any expenses from the input. Please try a different format.[/yellow]")
+            print("\n[dim]Examples:[/dim]")
+            print("  [dim]ledger say \"Bought airtime for 500 and lunch for 1500\"[/dim]")
+            print("  [dim]ledger say \"Transport 800, airtime 300\"[/dim]")
+            print("  [dim]ledger say \"Spent 200 on coffee\"[/dim]")
+            return
+        
+        # Show what was parsed
+        print(f"[blue]Parsed {len(parsed_expenses)} expense(s) from:[/blue] \"{input_text}\"")
+        print()
+        
+        # Add each expense
+        for expense_data in parsed_expenses:
+            add_expense(expense_data["expense"], expense_data["amount"])
+            print(f"✅ Added: {expense_data['expense']} - ₦{expense_data['amount']}")
+        
+        print(f"\n[bold green]Successfully added {len(parsed_expenses)} expense(s)![/bold green]")
+        
+    except Exception as e:
+        print(f"[red]Error processing natural language input: {e}[/red]")
 
 
 @app.command()

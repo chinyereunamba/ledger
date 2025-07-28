@@ -31,6 +31,10 @@ async def root():
                 "GET /summary": "Get expense summary (with optional filters)",
                 "GET /stats": "Get comprehensive analytics"
             },
+            "nlp": {
+                "POST /nlp/parse": "Parse natural language to extract expenses",
+                "POST /nlp/say": "Parse natural language and add expenses"
+            },
             "utility": {
                 "GET /health": "Health check",
                 "GET /": "API information"
