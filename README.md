@@ -1,5 +1,3 @@
-# Ledger Project
-
 ## 🧾 QuickLedger
 
 A fast, intuitive, **CLI-first expense tracker** built with Python & Typer — track your daily spending using natural language, export summaries, and optionally extend via a lightweight API.
@@ -55,7 +53,7 @@ ledger add
 Supports prompts or natural language:
 
 ```bash
-ledger add "Bought food for 1500"
+ledger say "Bought food for 1500"
 ```
 
 #### 📅 View Expenses
