@@ -85,7 +85,6 @@ def add(
 
         add_expense(expense, amount)
 
-        # Reset so user can enter a new expense interactively
         expense = None
         amount = None
 
@@ -236,7 +235,7 @@ def delete(
         ledger delete 2025-07-15 0
         ledger delete 2025-07-15 "lunch"
     """
-    # Try to convert identifier to int (index), otherwise use as string (name)
+    
     try:
         identifier = int(identifier)
     except ValueError:
@@ -278,7 +277,6 @@ def categories(
         
         manage_categories(action, category, keyword_list)
     else:
-        # Default to list if no action or "list" action
         manage_categories("list")
 
 

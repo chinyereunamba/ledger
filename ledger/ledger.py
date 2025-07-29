@@ -324,7 +324,7 @@ def load_categories():
     except FileNotFoundError:
         # Default categories
         default_categories = {
-            "food": ["lunch", "dinner", "breakfast", "snacks", "groceries", "restaurant"],
+            "food": ["lunch", "dinner", "breakfast", "snacks", "groceries", "restaurant", 'bread', 'rice', 'moi-moi', 'soup'],
             "transport": ["fuel", "taxi", "bus", "train", "uber", "transport"],
             "utilities": ["electricity", "water", "internet", "phone", "gas"],
             "entertainment": ["movie", "games", "music", "books", "streaming"],
