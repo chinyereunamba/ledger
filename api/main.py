@@ -2,6 +2,7 @@
 Main FastAPI application
 """
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 # Import route modules
 from routes.expenses import router as expenses_router
@@ -16,6 +17,19 @@ app = FastAPI(
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc"
+)
+
+origins = [
+    '*'
+]
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Include routers

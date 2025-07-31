@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>QuickLedger - Smart Expense Tracker</title>
+
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#3B82F6" />
+    <meta
+      name="description"
+      content="Track your expenses with natural language processing"
+    />
+    <link rel="manifest" href="manifest.json" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="192x192"
+      href="icons/icon-192x192.png"
+    />
+    <link rel="apple-touch-icon" href="icons/icon-192x192.png" />
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: {
+                50: "#eff6ff",
+                500: "#3b82f6",
+                600: "#2563eb",
+                700: "#1d4ed8",
+              },
+            },
+          },
+        },
+      };
+    </script>
+
+    <!-- Chart.js for analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Custom Styles -->
+    <style>
+      .glass {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .gradient-bg {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      }
+
+      .expense-card {
+        transition: all 0.3s ease;
+      }
+
+      .expense-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      }
+
+      .loading {
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+      }
+
+      .slide-in {
+        animation: slideIn 0.3s ease-out;
+      }
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50 min-h-screen">
+    <!-- Navigation -->
+    <nav class="gradient-bg text-white shadow-lg">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <h1 class="text-xl font-bold">💰 QuickLedger</h1>
+            </div>
+          </div>
+          <div class="hidden md:block">
+            <div class="ml-10 flex items-baseline space-x-4">
+              <button
+                onclick="showSection('dashboard')"
+                class="nav-btn px-3 py-2 rounded-md text-sm font-medium hover:bg-white hover:bg-opacity-20 transition-colors"
+              >
+                Dashboard
+              </button>
+              <button
+                onclick="showSection('expenses')"
+                class="nav-btn px-3 py-2 rounded-md text-sm font-medium hover:bg-white hover:bg-opacity-20 transition-colors"
+              >
+                Expenses
+              </button>
+              <button
+                onclick="showSection('analytics')"
+                class="nav-btn px-3 py-2 rounded-md text-sm font-medium hover:bg-white hover:bg-opacity-20 transition-colors"
+              >
+                Analytics
+              </button>
+              <button
+                onclick="showSection('add')"
+                class="bg-white bg-opacity-20 px-3 py-2 rounded-md text-sm font-medium hover:bg-opacity-30 transition-colors"
+              >
+                Add Expense
+              </button>
+            </div>
+          </div>
+          <div class="md:hidden">
+            <button
+              onclick="toggleMobileMenu()"
+              class="mobile-menu-btn p-2 rounded-md hover:bg-white hover:bg-opacity-20"
+            >
+              <svg
+                class="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mobile menu -->
+      <div id="mobile-menu" class="md:hidden hidden">
+        <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-black bg-opacity-20">
+          <button
+            onclick="showSection('dashboard')"
+            class="block px-3 py-2 rounded-md text-base font-medium hover:bg-white hover:bg-opacity-20 w-full text-left"
+          >
+            Dashboard
+          </button>
+          <button
+            onclick="showSection('expenses')"
+            class="block px-3 py-2 rounded-md text-base font-medium hover:bg-white hover:bg-opacity-20 w-full text-left"
+          >
+            Expenses
+          </button>
+          <button
+            onclick="showSection('analytics')"
+            class="block px-3 py-2 rounded-md text-base font-medium hover:bg-white hover:bg-opacity-20 w-full text-left"
+          >
+            Analytics
+          </button>
+          <button
+            onclick="showSection('add')"
+            class="block px-3 py-2 rounded-md text-base font-medium hover:bg-white hover:bg-opacity-20 w-full text-left"
+          >
+            Add Expense
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+      <!-- Dashboard Section -->
+      <div id="dashboard-section" class="section">
+        <div class="mb-8">
+          <h2 class="text-3xl font-bold text-gray-900 mb-2">Dashboard</h2>
+          <p class="text-gray-600">
+            Overview of your expenses and spending patterns
+          </p>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div class="bg-white rounded-lg shadow-md p-6 expense-card">
+            <div class="flex items-center">
+              <div class="flex-shrink-0">
+                <div
+                  class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center"
+                >
+                  <span class="text-white text-sm font-bold">₦</span>
+                </div>
+              </div>
+              <div class="ml-4">
+                <p class="text-sm font-medium text-gray-500">Total Spent</p>
+                <p id="total-spent" class="text-2xl font-bold text-gray-900">
+                  ₦0
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-lg shadow-md p-6 expense-card">
+            <div class="flex items-center">
+              <div class="flex-shrink-0">
+                <div
+                  class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center"
+                >
+                  <span class="text-white text-sm">📊</span>
+                </div>
+              </div>
+              <div class="ml-4">
+                <p class="text-sm font-medium text-gray-500">Daily Average</p>
+                <p id="daily-average" class="text-2xl font-bold text-gray-900">
+                  ₦0
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-lg shadow-md p-6 expense-card">
+            <div class="flex items-center">
+              <div class="flex-shrink-0">
+                <div
+                  class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center"
+                >
+                  <span class="text-white text-sm">#</span>
+                </div>
+              </div>
+              <div class="ml-4">
+                <p class="text-sm font-medium text-gray-500">Transactions</p>
+                <p
+                  id="transaction-count"
+                  class="text-2xl font-bold text-gray-900"
+                >
+                  0
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-lg shadow-md p-6 expense-card">
+            <div class="flex items-center">
+              <div class="flex-shrink-0">
+                <div
+                  class="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center"
+                >
+                  <span class="text-white text-sm">📅</span>
+                </div>
+              </div>
+              <div class="ml-4">
+                <p class="text-sm font-medium text-gray-500">Days Tracked</p>
+                <p id="days-tracked" class="text-2xl font-bold text-gray-900">
+                  0
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Expenses -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">
+            Recent Expenses
+          </h3>
+          <div id="recent-expenses" class="space-y-3">
+            <!-- Recent expenses will be loaded here -->
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Add</h3>
+            <div class="space-y-3">
+              <input
+                type="text"
+                id="quick-expense"
+                placeholder="What did you buy?"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <input
+                type="number"
+                id="quick-amount"
+                placeholder="Amount"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button
+                onclick="quickAddExpense()"
+                class="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition-colors"
+              >
+                Add Expense
+              </button>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">
+              Natural Language
+            </h3>
+            <div class="space-y-3">
+              <textarea
+                id="nlp-input"
+                placeholder="e.g., 'Bought lunch for 1500 and transport 800'"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-20 resize-none"
+              ></textarea>
+              <button
+                onclick="processNaturalLanguage()"
+                class="w-full bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600 transition-colors"
+              >
+                Process & Add
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add Expense Section -->
+      <div id="add-section" class="section hidden">
+        <div class="mb-8">
+          <h2 class="text-3xl font-bold text-gray-900 mb-2">Add Expense</h2>
+          <p class="text-gray-600">Track your spending with ease</p>
+        </div>
+
+        <div class="max-w-2xl mx-auto">
+          <div class="bg-white rounded-lg shadow-md p-8">
+            <form id="expense-form" class="space-y-6">
+              <div>
+                <label
+                  for="expense-name"
+                  class="block text-sm font-medium text-gray-700 mb-2"
+                  >What did you buy?</label
+                >
+                <input
+                  type="text"
+                  id="expense-name"
+                  required
+                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="e.g., Lunch, Transport, Groceries"
+                />
+              </div>
+
+              <div>
+                <label
+                  for="expense-amount"
+                  class="block text-sm font-medium text-gray-700 mb-2"
+                  >Amount (₦)</label
+                >
+                <input
+                  type="number"
+                  id="expense-amount"
+                  required
+                  step="0.01"
+                  min="0"
+                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="0.00"
+                />
+              </div>
+
+              <div>
+                <label
+                  for="expense-date"
+                  class="block text-sm font-medium text-gray-700 mb-2"
+                  >Date</label
+                >
+                <input
+                  type="date"
+                  id="expense-date"
+                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <button
+                type="submit"
+                class="w-full bg-blue-500 text-white py-3 px-6 rounded-lg hover:bg-blue-600 transition-colors font-medium"
+              >
+                Add Expense
+              </button>
+            </form>
+          </div>
+
+          <!-- Natural Language Input -->
+          <div class="bg-white rounded-lg shadow-md p-8 mt-8">
+            <h3 class="text-xl font-semibold text-gray-900 mb-4">
+              Or use Natural Language
+            </h3>
+            <p class="text-gray-600 mb-4">
+              Type naturally, like "Bought lunch for 1500 and transport 800"
+            </p>
+
+            <div class="space-y-4">
+              <textarea
+                id="nlp-text"
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent h-24 resize-none"
+                placeholder="Describe your expenses naturally..."
+              ></textarea>
+              <button
+                onclick="processNaturalLanguageAdd()"
+                class="w-full bg-green-500 text-white py-3 px-6 rounded-lg hover:bg-green-600 transition-colors font-medium"
+              >
+                Process & Add Expenses
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Expenses Section -->
+      <div id="expenses-section" class="section hidden">
+        <div class="mb-8 flex justify-between items-center">
+          <div>
+            <h2 class="text-3xl font-bold text-gray-900 mb-2">Expenses</h2>
+            <p class="text-gray-600">View and manage your expense history</p>
+          </div>
+          <div class="flex space-x-2">
+            <select
+              id="expense-filter"
+              class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">All Time</option>
+              <option value="today">Today</option>
+              <option value="week">This Week</option>
+              <option value="month">This Month</option>
+            </select>
+            <button
+              onclick="loadExpenses()"
+              class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+            >
+              Refresh
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md">
+          <div class="p-6 border-b border-gray-200">
+            <div class="flex justify-between items-center">
+              <h3 class="text-lg font-semibold text-gray-900">Expense List</h3>
+              <span id="expense-count" class="text-sm text-gray-500"
+                >0 expenses</span
+              >
+            </div>
+          </div>
+          <div id="expenses-list" class="divide-y divide-gray-200">
+            <!-- Expenses will be loaded here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Analytics Section -->
+      <div id="analytics-section" class="section hidden">
+        <div class="mb-8">
+          <h2 class="text-3xl font-bold text-gray-900 mb-2">Analytics</h2>
+          <p class="text-gray-600">Insights into your spending patterns</p>
+        </div>
+
+        <!-- Charts -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">
+              Spending by Category
+            </h3>
+            <div class="h-64">
+              <canvas id="category-chart"></canvas>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">
+              Top Expenses
+            </h3>
+            <div class="h-64">
+              <canvas id="expenses-chart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Detailed Stats -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <h3 class="text-lg font-semibold text-gray-900 mb-6">
+            Detailed Statistics
+          </h3>
+          <div
+            id="detailed-stats"
+            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 h-56"
+          >
+            <!-- Stats will be loaded here -->
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2">
+      <!-- Toasts will be added here -->
+    </div>
+
+    <!-- Loading Overlay -->
+    <div
+      id="loading-overlay"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden"
+    >
+      <div class="bg-white rounded-lg p-6 flex items-center space-x-3">
+        <div
+          class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"
+        ></div>
+        <span class="text-gray-700">Loading...</span>
+      </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/app.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/charts.js"></script>
+    <script src="js/pwa.js"></script>
+  </body>
+</html>
+""
