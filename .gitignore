@@ -5,3 +5,12 @@ __pycache__
 *.json
 .pytest_cache
 dist
+*.sh
+Makefile
+dev.py
+*.yml
+Dockerfile*
+*.conf
+*.desktop
+*launcher.py
+*.AppImage
