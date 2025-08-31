@@ -174,10 +174,12 @@ class QuickLedger {
         (expense) => `
             <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                 <div>
-                    <p class="font-medium text-gray-900">${expense.expense}</p>
+                    <p class="font-medium text-gray-900">${this.formatExpenseName(
+                      expense.expense
+                    )}</p>
                     <p class="text-sm text-gray-500">${this.formatDate(
                       expense.date
-                    )}</p>
+                    )} • ${this.getCategoryDisplay(expense.expense)}</p>
                 </div>
                 <span class="font-semibold text-gray-900">₦${this.formatNumber(
                   expense.amount
@@ -383,12 +385,14 @@ class QuickLedger {
                                   .toUpperCase()}</span>
                             </div>
                             <div>
-                                <p class="font-medium text-gray-900">${
+                                <p class="font-medium text-gray-900">${this.formatExpenseName(
                                   expense.expense
-                                }</p>
+                                )}</p>
                                 <p class="text-sm text-gray-500">${this.formatDate(
                                   expense.date
-                                )}</p>
+                                )} • ${this.getCategoryDisplay(
+          expense.expense
+        )}</p>
                             </div>
                         </div>
                     </div>
@@ -424,8 +428,13 @@ class QuickLedger {
     try {
       this.showLoading();
 
-      const stats = await api.getStats();
-      this.displayAnalytics(stats);
+      // Load both stats and recent expenses for comprehensive analytics
+      const [stats, expenses] = await Promise.all([
+        api.getStats(),
+        api.getExpenses({ limit: 100 }),
+      ]);
+
+      this.displayEnhancedAnalytics(stats, expenses.expenses);
     } catch (error) {
       console.error("Error loading analytics:", error);
       this.showToast("Error loading analytics", "error");
@@ -434,64 +443,254 @@ class QuickLedger {
     }
   }
 
-  displayAnalytics(stats) {
-    // Update detailed stats
-    const detailedStats = document.getElementById("detailed-stats");
-    if (detailedStats) {
-      detailedStats.innerHTML = `
-                <div class="text-center">
-                    <p class="text-2xl font-bold text-blue-600">₦${this.formatNumber(
-                      stats.total_spent
-                    )}</p>
-                    <p class="text-sm text-gray-500">Total Spent</p>
-                </div>
-                <div class="text-center">
-                    <p class="text-2xl font-bold text-green-600">₦${this.formatNumber(
-                      stats.daily_average
-                    )}</p>
-                    <p class="text-sm text-gray-500">Daily Average</p>
-                </div>
-                <div class="text-center">
-                    <p class="text-2xl font-bold text-purple-600">${
-                      stats.transaction_count
-                    }</p>
-                    <p class="text-sm text-gray-500">Total Transactions</p>
-                </div>
-                <div class="text-center">
-                    <p class="text-2xl font-bold text-orange-600">${
-                      stats.most_spent_category?.name || "N/A"
-                    }</p>
-                    <p class="text-sm text-gray-500">Top Category</p>
-                </div>
-                <div class="text-center">
-                    <p class="text-2xl font-bold text-red-600">${
-                      stats.most_frequent_expense?.name || "N/A"
-                    }</p>
-                    <p class="text-sm text-gray-500">Most Frequent</p>
-                </div>
-                <div class="text-center">
-                    <p class="text-2xl font-bold text-indigo-600">${
-                      stats.most_expensive_day?.date || "N/A"
-                    }</p>
-                    <p class="text-sm text-gray-500">Highest Spending Day</p>
-                </div>
-            `;
-    }
+  displayEnhancedAnalytics(stats, expenses) {
+    // Update key metrics cards
+    document.getElementById(
+      "analytics-total-spent"
+    ).textContent = `₦${this.formatNumber(stats.total_spent)}`;
+    document.getElementById(
+      "analytics-daily-avg"
+    ).textContent = `₦${this.formatNumber(stats.daily_average)}`;
+    document.getElementById("analytics-top-category").textContent =
+      this.formatCategoryName(stats.most_spent_category?.name) || "N/A";
+    document.getElementById("analytics-transactions").textContent =
+      stats.transaction_count.toLocaleString();
 
-    // Update charts
-    this.updateCharts(stats);
+    // Process expenses for additional analytics
+    const processedData = this.processExpensesForAnalytics(expenses);
+
+    // Update all charts
+    this.updateEnhancedCharts(stats, processedData);
+
+    // Update insights
+    this.updateSpendingInsights(stats, processedData);
+
+    // Update top expenses list
+    this.updateTopExpensesList(stats.top_expenses || []);
+
+    // Update detailed stats table
+    this.updateDetailedStatsTable(stats, processedData);
   }
 
-  updateCharts(stats) {
-    // Category chart
+  processExpensesForAnalytics(expenses) {
+    const dailyData = {};
+    const monthlyData = {};
+    const categoryData = {};
+
+    expenses.forEach((expense) => {
+      const date = expense.date;
+      const amount = parseFloat(expense.amount);
+      const category = this.getCategoryDisplay(expense.expense);
+      const month = date.substring(0, 7); // YYYY-MM
+
+      // Daily data
+      dailyData[date] = (dailyData[date] || 0) + amount;
+
+      // Monthly data
+      monthlyData[month] = (monthlyData[month] || 0) + amount;
+
+      // Category data
+      categoryData[category] = (categoryData[category] || 0) + amount;
+    });
+
+    return {
+      dailyData,
+      monthlyData,
+      categoryData,
+      totalExpenses: expenses.length,
+    };
+  }
+
+  updateEnhancedCharts(stats, processedData) {
+    // Update existing charts
     if (stats.top_categories && stats.top_categories.length > 0) {
       charts.updateCategoryChart(stats.top_categories);
+      charts.createCategoryComparisonChart(stats.top_categories);
     }
 
-    // Expenses chart
-    if (stats.top_expenses && stats.top_expenses.length > 0) {
-      charts.updateExpensesChart(stats.top_expenses);
+    // Create new charts
+    if (Object.keys(processedData.dailyData).length > 0) {
+      charts.createTrendChart(processedData.dailyData);
     }
+
+    if (Object.keys(processedData.monthlyData).length > 0) {
+      charts.createMonthlyChart(processedData.monthlyData);
+    }
+  }
+
+  updateSpendingInsights(stats, processedData) {
+    const insights = [];
+
+    // Food spending insight
+    const foodCategory = stats.top_categories?.find(
+      (cat) => cat.name.toLowerCase() === "food"
+    );
+    if (foodCategory) {
+      const foodPercentage = (
+        (foodCategory.amount / stats.total_spent) *
+        100
+      ).toFixed(1);
+      insights.push({
+        icon: "🍽️",
+        text: `Food represents ${foodPercentage}% of your total spending (₦${this.formatNumber(
+          foodCategory.amount
+        )})`,
+      });
+    }
+
+    // Daily average insight
+    const avgDaily = stats.daily_average;
+    if (avgDaily > 2000) {
+      insights.push({
+        icon: "📈",
+        text: `Your daily average of ₦${this.formatNumber(
+          avgDaily
+        )} is quite high. Consider tracking smaller expenses.`,
+      });
+    } else if (avgDaily < 500) {
+      insights.push({
+        icon: "💡",
+        text: `Great job keeping daily spending low at ₦${this.formatNumber(
+          avgDaily
+        )} average!`,
+      });
+    }
+
+    // Transaction frequency insight
+    if (stats.transaction_count > 50) {
+      insights.push({
+        icon: "🔄",
+        text: `You have ${stats.transaction_count} transactions. Consider consolidating similar expenses.`,
+      });
+    }
+
+    // Most expensive day insight
+    if (stats.most_expensive_day) {
+      insights.push({
+        icon: "📅",
+        text: `Your highest spending day was ${
+          stats.most_expensive_day.date
+        } with ₦${this.formatNumber(stats.most_expensive_day.amount)}`,
+      });
+    }
+
+    // Render insights
+    const container = document.getElementById("spending-insights");
+    if (container) {
+      container.innerHTML = insights
+        .map(
+          (insight) => `
+        <div class="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
+          <span class="text-2xl">${insight.icon}</span>
+          <p class="text-sm text-gray-700">${insight.text}</p>
+        </div>
+      `
+        )
+        .join("");
+    }
+  }
+
+  updateTopExpensesList(topExpenses) {
+    const container = document.getElementById("top-expenses-list");
+    if (!container) return;
+
+    if (topExpenses.length === 0) {
+      container.innerHTML =
+        '<p class="text-gray-500 text-center">No expense data available</p>';
+      return;
+    }
+
+    container.innerHTML = topExpenses
+      .slice(0, 5)
+      .map(
+        (expense, index) => `
+      <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+        <div class="flex items-center space-x-3">
+          <div class="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+            <span class="text-orange-600 font-bold text-sm">${index + 1}</span>
+          </div>
+          <div>
+            <p class="font-medium text-gray-900">${this.formatExpenseName(
+              expense.name
+            )}</p>
+            <p class="text-sm text-gray-500">${expense.count || 1} transaction${
+          (expense.count || 1) > 1 ? "s" : ""
+        }</p>
+          </div>
+        </div>
+        <span class="font-semibold text-gray-900">₦${this.formatNumber(
+          expense.total_amount || expense.amount
+        )}</span>
+      </div>
+    `
+      )
+      .join("");
+  }
+
+  updateDetailedStatsTable(stats, processedData) {
+    const container = document.getElementById("detailed-stats-table");
+    if (!container) return;
+
+    const tableData = [
+      {
+        metric: "Total Spent",
+        value: `₦${this.formatNumber(stats.total_spent)}`,
+        details: "All time",
+      },
+      {
+        metric: "Daily Average",
+        value: `₦${this.formatNumber(stats.daily_average)}`,
+        details: "Based on active days",
+      },
+      {
+        metric: "Transaction Count",
+        value: stats.transaction_count.toLocaleString(),
+        details: "Total entries",
+      },
+      {
+        metric: "Days Tracked",
+        value: stats.days_tracked.toLocaleString(),
+        details: "Days with expenses",
+      },
+      {
+        metric: "Top Category",
+        value:
+          this.formatCategoryName(stats.most_spent_category?.name) || "N/A",
+        details: `₦${this.formatNumber(
+          stats.most_spent_category?.amount || 0
+        )}`,
+      },
+      {
+        metric: "Most Frequent Expense",
+        value:
+          this.formatExpenseName(stats.most_frequent_expense?.name) || "N/A",
+        details: `${stats.most_frequent_expense?.count || 0} times`,
+      },
+      {
+        metric: "Highest Spending Day",
+        value: stats.most_expensive_day?.date || "N/A",
+        details: `₦${this.formatNumber(stats.most_expensive_day?.amount || 0)}`,
+      },
+      {
+        metric: "Average per Transaction",
+        value: `₦${this.formatNumber(
+          stats.total_spent / stats.transaction_count
+        )}`,
+        details: "Per expense entry",
+      },
+    ];
+
+    container.innerHTML = tableData
+      .map(
+        (row) => `
+      <tr>
+        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${row.metric}</td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${row.value}</td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${row.details}</td>
+      </tr>
+    `
+      )
+      .join("");
   }
 
   async editExpense(date, index) {
@@ -539,6 +738,62 @@ class QuickLedger {
       month: "short",
       day: "numeric",
     });
+  }
+
+  formatExpenseName(name) {
+    if (!name) return "N/A";
+    return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+  }
+
+  formatCategoryName(name) {
+    if (!name) return "N/A";
+    return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+  }
+
+  getCategoryDisplay(expenseName) {
+    // Simple category mapping for display - this could be enhanced
+    // to call the backend for actual category determination
+    const expense = expenseName.toLowerCase();
+
+    // Basic category detection for display purposes
+    if (
+      [
+        "food",
+        "lunch",
+        "dinner",
+        "breakfast",
+        "snacks",
+        "bread",
+        "rice",
+        "fish",
+        "milk",
+        "soup",
+        "pear",
+        "ice",
+      ].some((keyword) => expense.includes(keyword))
+    ) {
+      return "Food";
+    } else if (
+      ["transport", "fuel", "taxi", "bus", "uber"].some((keyword) =>
+        expense.includes(keyword)
+      )
+    ) {
+      return "Transport";
+    } else if (
+      ["data", "airtime", "internet"].some((keyword) =>
+        expense.includes(keyword)
+      )
+    ) {
+      return "Data";
+    } else if (
+      ["electricity", "water", "gas", "phone"].some((keyword) =>
+        expense.includes(keyword)
+      )
+    ) {
+      return "Utilities";
+    } else {
+      return "Other";
+    }
   }
 
   showLoading() {

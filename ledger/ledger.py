@@ -320,17 +320,22 @@ def load_categories():
 
     try:
         with open(CATEGORIES_FILE, "r") as f:
-            return json.load(f)
+            categories = json.load(f)
+            # Normalize all category names to lowercase
+            normalized_categories = {}
+            for category, keywords in categories.items():
+                normalized_categories[category.lower()] = keywords
+            return normalized_categories
     except FileNotFoundError:
         # Default categories
         default_categories = {
-            "food": ["lunch", "dinner", "breakfast", "snacks", "groceries", "restaurant", 'bread', 'rice', 'moi-moi', 'soup'],
-            "transport": ["fuel", "taxi", "bus", "train", "uber", "transport"],
-            "utilities": ["electricity", "water", "internet", "phone", "gas"],
-            "entertainment": ["movie", "games", "music", "books", "streaming"],
-            "health": ["medicine", "doctor", "hospital", "pharmacy", "fitness"],
-            "shopping": ["clothes", "electronics", "household", "gifts"],
-            "education": ["books", "courses", "tuition", "training"],
+            "food": ["food", "lunch", "dinner", "breakfast", "brunch", "snacks", "groceries", "restaurant", 'bread', 'rice', 'moi-moi', 'soup', 'fish', 'milk', 'pear', 'ice', 'water', 'drink', 'juice', 'tea', 'coffee', 'groundnut', 'meal'],
+            "transport": ["transport", "fuel", "taxi", "bus", "train", "uber"],
+            "utilities": ["utilities", "electricity", "water", "internet", "phone", "gas"],
+            "entertainment": ["entertainment", "movie", "games", "music", "books", "streaming"],
+            "health": ["health", "medicine", "doctor", "hospital", "pharmacy", "fitness"],
+            "shopping": ["shopping", "clothes", "electronics", "household", "gifts"],
+            "education": ["education", "books", "courses", "tuition", "training"],
             "miscellaneous": []
         }
         save_categories(default_categories)
@@ -354,11 +359,17 @@ def save_categories(categories):
 def get_expense_category(expense_name):
     """Determine category for an expense based on keywords"""
     categories = load_categories()
-    expense_lower = expense_name.lower()
+    expense_lower = expense_name.lower().strip()
 
+    # First check for exact matches (highest priority)
     for category, keywords in categories.items():
-        if any(keyword in expense_lower for keyword in keywords):
-            return category
+        if expense_lower in [keyword.lower() for keyword in keywords]:
+            return category.lower()
+    
+    # Then check for partial matches
+    for category, keywords in categories.items():
+        if any(keyword.lower() in expense_lower for keyword in keywords):
+            return category.lower()
 
     return "miscellaneous"
 
@@ -387,11 +398,12 @@ def manage_categories(action=None, category=None, keywords=None):
             print("[red]Category name required for add action[/red]")
             return
 
-        if category in categories:
+        category_lower = category.lower()
+        if category_lower in categories:
             print(f"[yellow]Category '{category}' already exists[/yellow]")
             return
 
-        categories[category] = keywords or []
+        categories[category_lower] = keywords or []
         save_categories(categories)
         print(
             f"[green]Added category '{category}' with keywords: {keywords or 'none'}[/green]")
@@ -399,13 +411,14 @@ def manage_categories(action=None, category=None, keywords=None):
     elif action == "remove":
         if not category:
             print("[red]Category name required for remove action[/red]")
-            return
+            return0
 
-        if category not in categories:
+        category_lower = category.lower()
+        if category_lower not in categories:
             print(f"[yellow]Category '{category}' not found[/yellow]")
             return
 
-        del categories[category]
+        del categories[category_lower]
         save_categories(categories)
         print(f"[green]Removed category '{category}'[/green]")
 
@@ -414,11 +427,12 @@ def manage_categories(action=None, category=None, keywords=None):
             print("[red]Category name required for update action[/red]")
             return
 
-        if category not in categories:
+        category_lower = category.lower()
+        if category_lower not in categories:
             print(f"[yellow]Category '{category}' not found[/yellow]")
             return
 
-        categories[category] = keywords or []
+        categories[category_lower] = keywords or []
         save_categories(categories)
         print(
             f"[green]Updated category '{category}' with keywords: {keywords or 'none'}[/green]")

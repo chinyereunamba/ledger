@@ -103,7 +103,7 @@ def _is_valid_expense_name(name: str) -> bool:
     
     # Common phrases and stop words to ignore
     stop_phrases = {
-        'i', 'i spent', 'spent', 'paid', 'bought', 'purchase', 'purchased',
+        'i', 'i spent', 'spent', 'paid', 'i bought', 'bought', 'purchase', 'purchased',
         'for', 'and', 'the', 'a', 'an', 'on', 'with', 'to', 'from',
         'my', 'me', 'we', 'us', 'our', 'this', 'that', 'these', 'those',
         'was', 'were', 'is', 'are', 'am', 'be', 'been', 'being',

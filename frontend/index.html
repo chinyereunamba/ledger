@@ -456,40 +456,191 @@
       <div id="analytics-section" class="section hidden">
         <div class="mb-8">
           <h2 class="text-3xl font-bold text-gray-900 mb-2">Analytics</h2>
-          <p class="text-gray-600">Insights into your spending patterns</p>
+          <p class="text-gray-600">
+            Comprehensive insights into your spending patterns
+          </p>
         </div>
 
-        <!-- Charts -->
+        <!-- Key Metrics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div
+            class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-md p-6 text-white"
+          >
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-blue-100 text-sm font-medium">Total Spent</p>
+                <p id="analytics-total-spent" class="text-2xl font-bold">₦0</p>
+              </div>
+              <div
+                class="w-12 h-12 bg-blue-400 rounded-full flex items-center justify-center"
+              >
+                <span class="text-xl">💰</span>
+              </div>
+            </div>
+          </div>
+
+          <div
+            class="bg-gradient-to-r from-green-500 to-green-600 rounded-lg shadow-md p-6 text-white"
+          >
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-green-100 text-sm font-medium">Daily Average</p>
+                <p id="analytics-daily-avg" class="text-2xl font-bold">₦0</p>
+              </div>
+              <div
+                class="w-12 h-12 bg-green-400 rounded-full flex items-center justify-center"
+              >
+                <span class="text-xl">📊</span>
+              </div>
+            </div>
+          </div>
+
+          <div
+            class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg shadow-md p-6 text-white"
+          >
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-purple-100 text-sm font-medium">Top Category</p>
+                <p id="analytics-top-category" class="text-2xl font-bold">
+                  N/A
+                </p>
+              </div>
+              <div
+                class="w-12 h-12 bg-purple-400 rounded-full flex items-center justify-center"
+              >
+                <span class="text-xl">🏆</span>
+              </div>
+            </div>
+          </div>
+
+          <div
+            class="bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg shadow-md p-6 text-white"
+          >
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-orange-100 text-sm font-medium">Transactions</p>
+                <p id="analytics-transactions" class="text-2xl font-bold">0</p>
+              </div>
+              <div
+                class="w-12 h-12 bg-orange-400 rounded-full flex items-center justify-center"
+              >
+                <span class="text-xl">📝</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          <!-- Category Pie Chart -->
           <div class="bg-white rounded-lg shadow-md p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">
-              Spending by Category
-            </h3>
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-lg font-semibold text-gray-900">
+                Spending by Category
+              </h3>
+              <span class="text-sm text-gray-500">Distribution</span>
+            </div>
             <div class="h-64">
               <canvas id="category-chart"></canvas>
             </div>
           </div>
 
+          <!-- Category Comparison Bar Chart -->
           <div class="bg-white rounded-lg shadow-md p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">
-              Top Expenses
-            </h3>
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-lg font-semibold text-gray-900">
+                Category Comparison
+              </h3>
+              <span class="text-sm text-gray-500">Top 6</span>
+            </div>
             <div class="h-64">
-              <canvas id="expenses-chart"></canvas>
+              <canvas id="category-comparison-chart"></canvas>
+            </div>
+          </div>
+
+          <!-- Daily Spending Trend -->
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-lg font-semibold text-gray-900">
+                Daily Spending Trend
+              </h3>
+              <span class="text-sm text-gray-500">Last 30 days</span>
+            </div>
+            <div class="h-64">
+              <canvas id="trend-chart"></canvas>
+            </div>
+          </div>
+
+          <!-- Monthly Comparison -->
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-lg font-semibold text-gray-900">
+                Monthly Spending
+              </h3>
+              <span class="text-sm text-gray-500">By month</span>
+            </div>
+            <div class="h-64">
+              <canvas id="monthly-chart"></canvas>
             </div>
           </div>
         </div>
 
-        <!-- Detailed Stats -->
+        <!-- Detailed Insights -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          <!-- Spending Insights -->
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">
+              💡 Spending Insights
+            </h3>
+            <div id="spending-insights" class="space-y-3">
+              <!-- Insights will be loaded here -->
+            </div>
+          </div>
+
+          <!-- Top Expenses -->
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">
+              🔥 Top Individual Expenses
+            </h3>
+            <div id="top-expenses-list" class="space-y-3">
+              <!-- Top expenses will be loaded here -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Detailed Statistics Table -->
         <div class="bg-white rounded-lg shadow-md p-6">
           <h3 class="text-lg font-semibold text-gray-900 mb-6">
-            Detailed Statistics
+            📈 Detailed Statistics
           </h3>
-          <div
-            id="detailed-stats"
-            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 h-56"
-          >
-            <!-- Stats will be loaded here -->
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Metric
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Value
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Details
+                  </th>
+                </tr>
+              </thead>
+              <tbody
+                id="detailed-stats-table"
+                class="bg-white divide-y divide-gray-200"
+              >
+                <!-- Stats table will be loaded here -->
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -520,4 +671,3 @@
     <script src="js/pwa.js"></script>
   </body>
 </html>
-""

@@ -75,7 +75,7 @@ async def say_expenses(input_data: NaturalLanguageInput):
         added_expenses = []
         for expense_data in parsed_expenses:
             expense_item = {
-                "expense": expense_data["expense"],
+                "expense": expense_data["expense"].lower(),
                 "amount": expense_data["amount"]
             }
             data[current_date].append(expense_item)
