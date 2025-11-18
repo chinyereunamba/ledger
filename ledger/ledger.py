@@ -335,7 +335,7 @@ def load_categories():
             "entertainment": ["entertainment", "movie", "games", "music", "books", "streaming"],
             "health": ["health", "medicine", "doctor", "hospital", "pharmacy", "fitness"],
             "shopping": ["shopping", "clothes", "electronics", "household", "gifts"],
-            "education": ["education", "books", "courses", "tuition", "training"],
+            "education": ["education", "books", "courses", "tuition", "training",'textbook'],
             "miscellaneous": []
         }
         save_categories(default_categories)
@@ -828,3 +828,214 @@ def delete_expense(date, index_or_expense_name):
         print("[bold green]Expense deleted successfully.[/bold green]")
     except Exception as e:
         print(f"[red]Error saving ledger: {e}[/red]")
+
+# Budget management functions
+BUDGET_FILE = LEDGER_DIR / "budget.json"
+
+def load_budget_data():
+    """Load budget data from file"""
+    ensure_ledger_directory()
+    
+    try:
+        with open(BUDGET_FILE, "r") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        # Create default budget structure
+        default_budget = {
+            "monthly_budgets": {},
+            "current_month": None,
+            "auto_reset": True
+        }
+        save_budget_data(default_budget)
+        return default_budget
+
+def save_budget_data(budget_data):
+    """Save budget data to file"""
+    ensure_ledger_directory()
+    
+    with open(BUDGET_FILE, "w") as f:
+        json.dump(budget_data, f, indent=2)
+
+def get_current_month():
+    """Get current month in YYYY-MM format"""
+    return datetime.now().strftime("%Y-%m")
+
+def reset_monthly_budget_if_needed():
+    """Check if we need to reset the budget for a new month"""
+    budget_data = load_budget_data()
+    current_month = get_current_month()
+    
+    if budget_data.get("auto_reset", True) and budget_data.get("current_month") != current_month:
+        # New month detected, reset if there was a previous budget
+        if budget_data.get("current_month") and budget_data["monthly_budgets"]:
+            # Get the last month's budget amount
+            last_month_budgets = budget_data["monthly_budgets"]
+            if last_month_budgets:
+                # Get the most recent budget amount
+                recent_budget = list(last_month_budgets.values())[-1].get("amount", 0)
+                
+                # Set budget for current month
+                budget_data["monthly_budgets"][current_month] = {
+                    "amount": recent_budget,
+                    "spent": 0,
+                    "created_at": datetime.now().isoformat(),
+                    "reset_from_previous": True
+                }
+                
+                print(f"[green]Budget automatically reset for {current_month}: ₦{recent_budget:,.2f}[/green]")
+        
+        budget_data["current_month"] = current_month
+        save_budget_data(budget_data)
+    
+    return budget_data
+
+def set_monthly_budget(amount):
+    """Set budget for current month"""
+    if amount < 0:
+        print("[red]Budget amount must be positive[/red]")
+        return
+    
+    budget_data = reset_monthly_budget_if_needed()
+    current_month = get_current_month()
+    
+    # Calculate current spending
+    current_spending = get_monthly_spending(current_month)
+    
+    # Set budget for current month
+    budget_data["monthly_budgets"][current_month] = {
+        "amount": amount,
+        "spent": current_spending,
+        "created_at": datetime.now().isoformat(),
+        "reset_from_previous": False
+    }
+    
+    save_budget_data(budget_data)
+    
+    remaining = amount - current_spending
+    print(f"[green]Budget set for {current_month}: ₦{amount:,.2f}[/green]")
+    print(f"Current spending: ₦{current_spending:,.2f}")
+    print(f"Remaining: ₦{remaining:,.2f}")
+
+def get_monthly_spending(month=None):
+    """Get total spending for a specific month"""
+    if month is None:
+        month = get_current_month()
+    
+    try:
+        f = load_ledger("r")
+        data = json.load(f)
+    except Exception:
+        return 0
+    
+    total_spending = 0
+    for date_str, expenses in data.items():
+        if date_str.startswith(month):
+            for expense in expenses:
+                total_spending += float(expense["amount"])
+    
+    return total_spending
+
+def show_budget_status():
+    """Display current budget status"""
+    budget_data = reset_monthly_budget_if_needed()
+    current_month = get_current_month()
+    
+    monthly_budget = budget_data["monthly_budgets"].get(current_month, {
+        "amount": 0,
+        "spent": 0,
+        "created_at": None,
+        "reset_from_previous": False
+    })
+    
+    # Calculate current spending
+    current_spending = get_monthly_spending(current_month)
+    budget_amount = monthly_budget["amount"]
+    
+    if budget_amount == 0:
+        print(f"\n[yellow]No budget set for {current_month}[/yellow]")
+        print("Use 'ledger budget set <amount>' to set a monthly budget")
+        return
+    
+    remaining = budget_amount - current_spending
+    percentage = (current_spending / budget_amount * 100) if budget_amount > 0 else 0
+    
+    print(f"\n[bold blue]Budget Status for {current_month}[/bold blue]")
+    
+    table = Table("Metric", "Amount")
+    table.add_row("Budget", f"₦{budget_amount:,.2f}")
+    table.add_row("Spent", f"₦{current_spending:,.2f}")
+    table.add_row("Remaining", f"₦{remaining:,.2f}")
+    table.add_row("Percentage Used", f"{percentage:.1f}%")
+    
+    if current_spending > budget_amount:
+        table.add_row("[red]Over Budget[/red]", f"[red]₦{abs(remaining):,.2f}[/red]")
+    
+    console.print(table)
+    
+    # Show status message
+    if percentage > 90:
+        print("[red]⚠️  Warning: You've used over 90% of your budget![/red]")
+    elif percentage > 75:
+        print("[yellow]⚠️  Caution: You've used over 75% of your budget[/yellow]")
+    elif percentage > 50:
+        print("[blue]ℹ️  You've used over half of your budget[/blue]")
+    else:
+        print("[green]✅ You're on track with your budget[/green]")
+
+def show_budget_history():
+    """Show budget history for all months"""
+    budget_data = load_budget_data()
+    
+    if not budget_data["monthly_budgets"]:
+        print("[yellow]No budget history found[/yellow]")
+        return
+    
+    print("\n[bold blue]Budget History[/bold blue]")
+    
+    table = Table("Month", "Budget", "Spent", "Remaining", "Status")
+    
+    # Sort months in reverse order (newest first)
+    sorted_months = sorted(budget_data["monthly_budgets"].items(), reverse=True)
+    
+    for month, budget_info in sorted_months:
+        # Calculate actual spending for this month
+        month_spending = get_monthly_spending(month)
+        budget_amount = budget_info["amount"]
+        remaining = budget_amount - month_spending
+        
+        if month_spending > budget_amount:
+            status = f"[red]Over by ₦{abs(remaining):,.2f}[/red]"
+        else:
+            status = f"[green]Under by ₦{remaining:,.2f}[/green]"
+        
+        table.add_row(
+            month,
+            f"₦{budget_amount:,.2f}",
+            f"₦{month_spending:,.2f}",
+            f"₦{remaining:,.2f}",
+            status
+        )
+    
+    console.print(table)
+    
+    auto_reset_status = "Enabled" if budget_data.get("auto_reset", True) else "Disabled"
+    print(f"\n[dim]Auto-reset: {auto_reset_status}[/dim]")
+
+def toggle_auto_reset(enabled=None):
+    """Toggle automatic monthly budget reset"""
+    budget_data = load_budget_data()
+    
+    if enabled is None:
+        # Toggle current state
+        enabled = not budget_data.get("auto_reset", True)
+    
+    budget_data["auto_reset"] = enabled
+    save_budget_data(budget_data)
+    
+    status = "enabled" if enabled else "disabled"
+    print(f"[green]Auto-reset {status} successfully[/green]")
+    
+    if enabled:
+        print("[dim]Your budget will automatically reset each month with the same amount[/dim]")
+    else:
+        print("[dim]You'll need to manually set your budget each month[/dim]")

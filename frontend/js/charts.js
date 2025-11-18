@@ -403,6 +403,63 @@ class ChartManager {
     );
   }
 
+  // Create dashboard mini trend chart
+  createDashboardTrendChart(dailyData) {
+    const ctx = document.getElementById("dashboard-trend-chart");
+    if (!ctx) return;
+
+    // Destroy existing chart
+    if (this.dashboardTrendChart) {
+      this.dashboardTrendChart.destroy();
+    }
+
+    const sortedDates = Object.keys(dailyData).sort().slice(-7); // Last 7 days
+    const data = {
+      labels: sortedDates.map((date) => {
+        const d = new Date(date);
+        return d.toLocaleDateString("en-NG", { weekday: "short" });
+      }),
+      datasets: [
+        {
+          data: sortedDates.map((date) => dailyData[date] || 0),
+          borderColor: "#3B82F6",
+          backgroundColor: "rgba(59, 130, 246, 0.1)",
+          borderWidth: 2,
+          fill: true,
+          tension: 0.4,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+        },
+      ],
+    };
+
+    this.dashboardTrendChart = new Chart(ctx, {
+      type: "line",
+      data: data,
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function (context) {
+                return `₦${context.parsed.y.toLocaleString()}`;
+              },
+            },
+          },
+        },
+        scales: {
+          x: { display: false },
+          y: { display: false },
+        },
+        elements: {
+          point: { radius: 0 },
+        },
+      },
+    });
+  }
+
   // Destroy all charts (useful for cleanup)
   destroyAll() {
     if (this.categoryChart) {
@@ -424,6 +481,10 @@ class ChartManager {
     if (this.categoryComparisonChart) {
       this.categoryComparisonChart.destroy();
       this.categoryComparisonChart = null;
+    }
+    if (this.dashboardTrendChart) {
+      this.dashboardTrendChart.destroy();
+      this.dashboardTrendChart = null;
     }
   }
 }

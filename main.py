@@ -2,7 +2,8 @@ from ledger.ledger import (
     add_expense, all_time, delete_all, get_stats, get_summary_by_date,
     get_summary_by_week, json_to_csv, get_summary, edit_expense, 
     delete_expense, manage_categories, get_category_summary, view_range,
-    show_backups, get_ledger_info, LEDGER
+    show_backups, get_ledger_info, LEDGER, LEDGER_DIR, ensure_ledger_directory,
+    set_monthly_budget, show_budget_status, show_budget_history, toggle_auto_reset
 )
 from ledger.nlp_parser import parse_and_enhance
 import typer
@@ -166,6 +167,7 @@ def main(ctx: typer.Context):
         print("  • [cyan]export[/cyan]     - Export data to CSV")
         print("  • [cyan]backups[/cyan]    - View backup files")
         print("  • [cyan]info[/cyan]       - Show ledger information")
+        print("  • [cyan]budget[/cyan]     - Manage monthly budgets")
         print("  • [cyan]clear[/cyan]      - Clear all expenses")
         print("  • [cyan]user[/cyan]       - User management\n")
         
@@ -342,6 +344,9 @@ def clear():
 user = typer.Typer()
 app.add_typer(user, name='user')
 
+budget = typer.Typer()
+app.add_typer(budget, name='budget')
+
 
 @user.command('delete')
 def delete():
@@ -350,6 +355,28 @@ def delete():
         delete_user()
     else:
         typer.Exit()
+
+@budget.command('set')
+def set_budget(amount: float = typer.Argument(..., help="Monthly budget amount")):
+    """Set monthly budget amount"""
+    set_monthly_budget(amount)
+
+@budget.command('status')
+def budget_status():
+    """Show current month's budget status"""
+    show_budget_status()
+
+@budget.command('history')
+def budget_history():
+    """Show budget history for all months"""
+    show_budget_history()
+
+@budget.command('auto-reset')
+def budget_auto_reset(
+    enable: Optional[bool] = typer.Option(None, "--enable/--disable", help="Enable or disable auto-reset")
+):
+    """Toggle automatic monthly budget reset"""
+    toggle_auto_reset(enable)
 
 
 if __name__ == "__main__":

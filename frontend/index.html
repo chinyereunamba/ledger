@@ -81,6 +81,62 @@
           transform: translateY(0);
         }
       }
+
+      .dashboard-card {
+        transition: all 0.3s ease;
+        border: 1px solid transparent;
+      }
+
+      .dashboard-card:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        border-color: rgba(59, 130, 246, 0.2);
+      }
+
+      .quick-expense-btn {
+        transition: all 0.2s ease;
+      }
+
+      .quick-expense-btn:hover {
+        transform: scale(1.02);
+      }
+
+      .budget-progress {
+        transition: width 0.5s ease-in-out;
+      }
+
+      .insight-card {
+        animation: fadeInUp 0.4s ease-out;
+      }
+
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .expense-table-row {
+        transition: all 0.2s ease;
+      }
+
+      .expense-table-row:hover {
+        background-color: #f9fafb;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      }
+
+      .action-button {
+        transition: all 0.2s ease;
+      }
+
+      .action-button:hover {
+        transform: scale(1.1);
+      }
     </style>
   </head>
   <body class="bg-gray-50 min-h-screen">
@@ -182,140 +238,319 @@
         <div class="mb-8">
           <h2 class="text-3xl font-bold text-gray-900 mb-2">Dashboard</h2>
           <p class="text-gray-600">
-            Overview of your expenses and spending patterns
+            Smart overview of your expenses and spending insights
           </p>
         </div>
 
-        <!-- Quick Stats -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div class="bg-white rounded-lg shadow-md p-6 expense-card">
-            <div class="flex items-center">
-              <div class="flex-shrink-0">
-                <div
-                  class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center"
-                >
-                  <span class="text-white text-sm font-bold">₦</span>
-                </div>
-              </div>
-              <div class="ml-4">
-                <p class="text-sm font-medium text-gray-500">Total Spent</p>
-                <p id="total-spent" class="text-2xl font-bold text-gray-900">
-                  ₦0
+        <!-- Enhanced Key Metrics Cards -->
+        <div
+          class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8"
+        >
+          <div
+            class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-md p-6 text-white expense-card"
+          >
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-blue-100 text-sm font-medium">This Month</p>
+                <p id="monthly-spent" class="text-2xl font-bold">₦0</p>
+                <p id="monthly-change" class="text-xs text-blue-100 mt-1">
+                  vs last month
                 </p>
+              </div>
+              <div
+                class="w-12 h-12 bg-blue-400 rounded-full flex items-center justify-center"
+              >
+                <span class="text-xl">�</sspan>
               </div>
             </div>
           </div>
 
-          <div class="bg-white rounded-lg shadow-md p-6 expense-card">
-            <div class="flex items-center">
-              <div class="flex-shrink-0">
-                <div
-                  class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center"
-                >
-                  <span class="text-white text-sm">📊</span>
-                </div>
-              </div>
-              <div class="ml-4">
-                <p class="text-sm font-medium text-gray-500">Daily Average</p>
-                <p id="daily-average" class="text-2xl font-bold text-gray-900">
-                  ₦0
+          <div
+            class="bg-gradient-to-r from-green-500 to-green-600 rounded-lg shadow-md p-6 text-white expense-card"
+          >
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-green-100 text-sm font-medium">Daily Average</p>
+                <p id="daily-average" class="text-2xl font-bold">₦0</p>
+                <p id="daily-trend" class="text-xs text-green-100 mt-1">
+                  spending trend
                 </p>
+              </div>
+              <div
+                class="w-12 h-12 bg-green-400 rounded-full flex items-center justify-center"
+              >
+                <span class="text-xl">📊</span>
               </div>
             </div>
           </div>
 
-          <div class="bg-white rounded-lg shadow-md p-6 expense-card">
-            <div class="flex items-center">
-              <div class="flex-shrink-0">
-                <div
-                  class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center"
-                >
-                  <span class="text-white text-sm">#</span>
-                </div>
-              </div>
-              <div class="ml-4">
-                <p class="text-sm font-medium text-gray-500">Transactions</p>
+          <div
+            class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg shadow-md p-6 text-white expense-card"
+          >
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-purple-100 text-sm font-medium">Top Category</p>
+                <p id="top-category" class="text-2xl font-bold">N/A</p>
                 <p
-                  id="transaction-count"
-                  class="text-2xl font-bold text-gray-900"
+                  id="top-category-amount"
+                  class="text-xs text-purple-100 mt-1"
                 >
-                  0
+                  ₦0 spent
                 </p>
+              </div>
+              <div
+                class="w-12 h-12 bg-purple-400 rounded-full flex items-center justify-center"
+              >
+                <span class="text-xl">🏆</span>
               </div>
             </div>
           </div>
 
-          <div class="bg-white rounded-lg shadow-md p-6 expense-card">
-            <div class="flex items-center">
-              <div class="flex-shrink-0">
-                <div
-                  class="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center"
-                >
-                  <span class="text-white text-sm">📅</span>
-                </div>
-              </div>
-              <div class="ml-4">
-                <p class="text-sm font-medium text-gray-500">Days Tracked</p>
-                <p id="days-tracked" class="text-2xl font-bold text-gray-900">
-                  0
+          <div
+            class="bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg shadow-md p-6 text-white expense-card"
+          >
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-orange-100 text-sm font-medium">This Week</p>
+                <p id="week-spent" class="text-2xl font-bold">₦0</p>
+                <p id="week-transactions" class="text-xs text-orange-100 mt-1">
+                  0 transactions
                 </p>
+              </div>
+              <div
+                class="w-12 h-12 bg-orange-400 rounded-full flex items-center justify-center"
+              >
+                <span class="text-xl">📅</span>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Recent Expenses -->
-        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-          <h3 class="text-lg font-semibold text-gray-900 mb-4">
-            Recent Expenses
-          </h3>
-          <div id="recent-expenses" class="space-y-3">
-            <!-- Recent expenses will be loaded here -->
-          </div>
-        </div>
-
-        <!-- Quick Actions -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Quick Insights & Mini Charts -->
+        <div
+          class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6 mb-8"
+        >
+          <!-- Spending Trend Mini Chart -->
           <div class="bg-white rounded-lg shadow-md p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Add</h3>
-            <div class="space-y-3">
-              <input
-                type="text"
-                id="quick-expense"
-                placeholder="What did you buy?"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <input
-                type="number"
-                id="quick-amount"
-                placeholder="Amount"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-lg font-semibold text-gray-900">7-Day Trend</h3>
+              <span
+                id="trend-indicator"
+                class="text-sm px-2 py-1 rounded-full bg-gray-100 text-gray-600"
+                >Stable</span
+              >
+            </div>
+            <div class="h-32">
+              <canvas id="dashboard-trend-chart"></canvas>
+            </div>
+          </div>
+
+          <!-- Category Breakdown -->
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-lg font-semibold text-gray-900">
+                Top Categories
+              </h3>
+              <button
+                onclick="showSection('analytics')"
+                class="text-blue-500 hover:text-blue-700 text-sm"
+              >
+                View All
+              </button>
+            </div>
+            <div id="dashboard-categories" class="space-y-3">
+              <!-- Categories will be loaded here -->
+            </div>
+          </div>
+
+          <!-- Smart Insights -->
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-lg font-semibold text-gray-900">
+                💡 Smart Insights
+              </h3>
+              <span class="text-xs text-gray-500">AI-powered</span>
+            </div>
+            <div id="dashboard-insights" class="space-y-3">
+              <!-- Insights will be loaded here -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Activity & Quick Actions -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 mb-8">
+          <!-- Enhanced Recent Expenses -->
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-lg font-semibold text-gray-900">
+                Recent Activity
+              </h3>
+              <button
+                onclick="showSection('expenses')"
+                class="text-blue-500 hover:text-blue-700 text-sm"
+              >
+                View All
+              </button>
+            </div>
+            <div id="recent-expenses" class="space-y-3">
+              <!-- Recent expenses will be loaded here -->
+            </div>
+          </div>
+
+          <!-- Enhanced Quick Actions -->
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">
+              ⚡ Quick Actions
+            </h3>
+
+            <!-- Quick Add Tabs -->
+            <div class="flex mb-4 bg-gray-100 rounded-lg p-1">
+              <button
+                onclick="switchQuickTab('simple')"
+                id="simple-tab"
+                class="flex-1 py-2 px-3 rounded-md text-sm font-medium bg-white text-gray-900 shadow-sm"
+              >
+                Simple
+              </button>
+              <button
+                onclick="switchQuickTab('smart')"
+                id="smart-tab"
+                class="flex-1 py-2 px-3 rounded-md text-sm font-medium text-gray-600 hover:text-gray-900"
+              >
+                Smart
+              </button>
+            </div>
+
+            <!-- Simple Quick Add -->
+            <div id="simple-quick-add" class="space-y-3">
+              <div class="flex space-x-2">
+                <input
+                  type="text"
+                  id="quick-expense"
+                  placeholder="What did you buy?"
+                  class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <input
+                  type="number"
+                  id="quick-amount"
+                  placeholder="Amount"
+                  class="w-24 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
               <button
                 onclick="quickAddExpense()"
-                class="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition-colors"
+                class="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition-colors font-medium"
               >
                 Add Expense
               </button>
             </div>
-          </div>
 
-          <div class="bg-white rounded-lg shadow-md p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">
-              Natural Language
-            </h3>
-            <div class="space-y-3">
+            <!-- Smart Natural Language -->
+            <div id="smart-quick-add" class="space-y-3 hidden">
               <textarea
                 id="nlp-input"
                 placeholder="e.g., 'Bought lunch for 1500 and transport 800'"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-20 resize-none"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 h-20 resize-none"
               ></textarea>
               <button
                 onclick="processNaturalLanguage()"
-                class="w-full bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600 transition-colors"
+                class="w-full bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600 transition-colors font-medium"
               >
                 Process & Add
               </button>
+            </div>
+
+            <!-- Quick Expense Buttons -->
+            <div class="mt-4 pt-4 border-t border-gray-200">
+              <p class="text-sm text-gray-600 mb-2">Common expenses:</p>
+              <div class="grid grid-cols-2 gap-2">
+                <button
+                  onclick="quickExpenseButton('Lunch', 1000)"
+                  class="text-xs bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded-md transition-colors"
+                >
+                  🍽️ Lunch ₦1000
+                </button>
+                <button
+                  onclick="quickExpenseButton('Transport', 500)"
+                  class="text-xs bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded-md transition-colors"
+                >
+                  🚗 Transport ₦500
+                </button>
+                <button
+                  onclick="quickExpenseButton('Data', 1500)"
+                  class="text-xs bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded-md transition-colors"
+                >
+                  📱 Data ₦1500
+                </button>
+                <button
+                  onclick="quickExpenseButton('Snacks', 300)"
+                  class="text-xs bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded-md transition-colors"
+                >
+                  🍿 Snacks ₦300
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Budget & Goals Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+          <!-- Monthly Budget Tracker -->
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-lg font-semibold text-gray-900">
+                📈 Monthly Budget
+              </h3>
+              <div class="flex space-x-2">
+                <button
+                  onclick="setBudget()"
+                  class="text-blue-500 hover:text-blue-700 text-sm"
+                >
+                  Set Budget
+                </button>
+                <button
+                  onclick="removeBudget()"
+                  id="remove-budget-btn"
+                  class="text-red-500 hover:text-red-700 text-sm hidden"
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
+            <div id="budget-tracker">
+              <div class="mb-4">
+                <div class="flex justify-between text-sm text-gray-600 mb-1">
+                  <span>Spent this month</span>
+                  <span id="budget-percentage">0%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                  <div
+                    id="budget-progress"
+                    class="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                    style="width: 0%"
+                  ></div>
+                </div>
+                <div class="flex justify-between text-xs text-gray-500 mt-1">
+                  <span id="budget-spent">₦0</span>
+                  <span id="budget-limit">No budget set</span>
+                </div>
+              </div>
+              <div id="budget-status" class="text-sm text-gray-600">
+                Set a monthly budget to track your spending goals
+              </div>
+            </div>
+          </div>
+
+          <!-- Expense Goals -->
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-lg font-semibold text-gray-900">
+                🎯 Spending Goals
+              </h3>
+              <span class="text-xs text-gray-500">This month</span>
+            </div>
+            <div id="spending-goals" class="space-y-3">
+              <!-- Goals will be loaded here -->
             </div>
           </div>
         </div>
@@ -437,7 +672,7 @@
           </div>
         </div>
 
-        <div class="bg-white rounded-lg shadow-md">
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
           <div class="p-6 border-b border-gray-200">
             <div class="flex justify-between items-center">
               <h3 class="text-lg font-semibold text-gray-900">Expense List</h3>
@@ -446,8 +681,106 @@
               >
             </div>
           </div>
-          <div id="expenses-list" class="divide-y divide-gray-200">
-            <!-- Expenses will be loaded here -->
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Expense
+                  </th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Category
+                  </th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Date
+                  </th>
+                  <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Amount
+                  </th>
+                  <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody id="expenses-table-body" class="bg-white divide-y divide-gray-200">
+                <!-- Expenses will be loaded here -->
+              </tbody>
+            </table>
+            <div id="expenses-empty" class="hidden p-8 text-center text-gray-500">
+              <div class="flex flex-col items-center">
+                <svg class="w-12 h-12 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                </svg>
+                <p class="text-lg font-medium text-gray-900 mb-2">No expenses found</p>
+                <p class="text-gray-500">Start tracking your expenses by adding your first entry</p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Pagination -->
+          <div id="expenses-pagination" class="bg-gray-50 px-4 py-3 border-t border-gray-200 sm:px-6">
+            <div class="flex items-center justify-between">
+              <div class="flex-1 flex justify-between sm:hidden">
+                <button
+                  id="prev-page-mobile"
+                  onclick="changePage('prev')"
+                  class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled
+                >
+                  Previous
+                </button>
+                <button
+                  id="next-page-mobile"
+                  onclick="changePage('next')"
+                  class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled
+                >
+                  Next
+                </button>
+              </div>
+              <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                <div>
+                  <p class="text-sm text-gray-700">
+                    Showing
+                    <span id="page-start" class="font-medium">0</span>
+                    to
+                    <span id="page-end" class="font-medium">0</span>
+                    of
+                    <span id="total-expenses" class="font-medium">0</span>
+                    results
+                  </p>
+                </div>
+                <div>
+                  <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                    <button
+                      id="prev-page"
+                      onclick="changePage('prev')"
+                      class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled
+                    >
+                      <span class="sr-only">Previous</span>
+                      <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                      </svg>
+                    </button>
+                    <div id="page-numbers" class="flex">
+                      <!-- Page numbers will be inserted here -->
+                    </div>
+                    <button
+                      id="next-page"
+                      onclick="changePage('next')"
+                      class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled
+                    >
+                      <span class="sr-only">Next</span>
+                      <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                      </svg>
+                    </button>
+                  </nav>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

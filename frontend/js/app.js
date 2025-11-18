@@ -4,6 +4,9 @@ class QuickLedger {
     this.currentSection = "dashboard";
     this.expenses = [];
     this.stats = {};
+    this.currentPage = 1;
+    this.itemsPerPage = 10;
+    this.totalExpenses = 0;
     this.init();
   }
 
@@ -101,7 +104,8 @@ class QuickLedger {
         this.loadDashboard();
         break;
       case "expenses":
-        this.loadExpenses();
+        this.currentPage = 1; // Reset to first page
+        this.loadExpenses(1);
         break;
       case "analytics":
         this.loadAnalytics();
@@ -130,14 +134,26 @@ class QuickLedger {
     try {
       this.showLoading();
 
-      // Load stats and recent expenses
-      const [stats, expenses] = await Promise.all([
-        api.getStats(),
-        api.getExpenses({ limit: 5 }),
-      ]);
+      // Load comprehensive dashboard data
+      const [stats, recentExpenses, weekExpenses, allExpenses] =
+        await Promise.all([
+          api.getStats(),
+          api.getExpenses({ limit: 10 }), // For recent expenses display
+          api.getExpenses({ week: true }),
+          api.getExpenses({ limit: 1000 }), // For monthly calculations
+        ]);
 
-      this.updateDashboardStats(stats);
-      this.updateRecentExpenses(expenses.expenses);
+      this.updateEnhancedDashboardStats(
+        stats,
+        allExpenses.expenses || [],
+        weekExpenses.expenses
+      );
+      this.updateRecentExpenses(recentExpenses.expenses);
+      this.updateDashboardCharts(stats, recentExpenses.expenses);
+      this.updateDashboardInsights(stats, recentExpenses.expenses);
+      this.updateBudgetTracker(stats);
+      this.updateSpendingGoals(stats);
+      this.updateRemoveBudgetButton();
     } catch (error) {
       console.error("Error loading dashboard:", error);
       this.showToast("Error loading dashboard data", "error");
@@ -146,17 +162,79 @@ class QuickLedger {
     }
   }
 
-  updateDashboardStats(stats) {
-    document.getElementById("total-spent").textContent = `₦${this.formatNumber(
-      stats.total_spent
-    )}`;
+  updateEnhancedDashboardStats(stats, allExpenses, weekExpenses) {
+    // Ensure allExpenses is an array
+    const expenses = Array.isArray(allExpenses) ? allExpenses : [];
+
+    // Calculate monthly expenses
+    const currentMonth = new Date().toISOString().slice(0, 7);
+    const monthlyExpenses = expenses.filter(
+      (exp) => exp.date && exp.date.startsWith(currentMonth)
+    );
+    const monthlyTotal = monthlyExpenses.reduce(
+      (sum, exp) => sum + parseFloat(exp.amount || 0),
+      0
+    );
+
+    document.getElementById(
+      "monthly-spent"
+    ).textContent = `₦${this.formatNumber(monthlyTotal)}`;
+
+    // Calculate monthly change (simplified - compare with previous month if available)
+    const changeElement = document.getElementById("monthly-change");
+    const previousMonth = this.getPreviousMonth(currentMonth);
+    const previousMonthExpenses = expenses.filter(
+      (exp) => exp.date && exp.date.startsWith(previousMonth)
+    );
+    const previousMonthTotal = previousMonthExpenses.reduce(
+      (sum, exp) => sum + parseFloat(exp.amount || 0),
+      0
+    );
+
+    if (previousMonthTotal > 0) {
+      const change =
+        ((monthlyTotal - previousMonthTotal) / previousMonthTotal) * 100;
+      changeElement.textContent =
+        change > 0
+          ? `+${change.toFixed(1)}% vs last month`
+          : `${change.toFixed(1)}% vs last month`;
+      changeElement.className =
+        change > 0
+          ? "text-xs text-red-200 mt-1"
+          : "text-xs text-green-200 mt-1";
+    } else {
+      changeElement.textContent = "First month tracked";
+    }
+
+    // Enhanced daily average with trend
     document.getElementById(
       "daily-average"
     ).textContent = `₦${this.formatNumber(stats.daily_average)}`;
-    document.getElementById("transaction-count").textContent =
-      stats.transaction_count.toLocaleString();
-    document.getElementById("days-tracked").textContent =
-      stats.days_tracked.toLocaleString();
+
+    const trendElement = document.getElementById("daily-trend");
+    const trend = this.calculateSpendingTrend(allExpenses);
+    trendElement.textContent = trend;
+
+    // Top category
+    const topCategory = stats.most_spent_category;
+    document.getElementById("top-category").textContent =
+      this.formatCategoryName(topCategory?.name) || "N/A";
+    document.getElementById(
+      "top-category-amount"
+    ).textContent = `₦${this.formatNumber(topCategory?.amount || 0)} spent`;
+
+    // Week stats
+    const weekExpensesArray = Array.isArray(weekExpenses) ? weekExpenses : [];
+    const weekTotal = weekExpensesArray.reduce(
+      (sum, exp) => sum + parseFloat(exp.amount || 0),
+      0
+    );
+    document.getElementById("week-spent").textContent = `₦${this.formatNumber(
+      weekTotal
+    )}`;
+    document.getElementById(
+      "week-transactions"
+    ).textContent = `${weekExpensesArray.length} transactions`;
   }
 
   updateRecentExpenses(expenses) {
@@ -170,23 +248,364 @@ class QuickLedger {
     }
 
     container.innerHTML = expenses
+      .slice(0, 5)
       .map(
-        (expense) => `
-            <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                <div>
-                    <p class="font-medium text-gray-900">${this.formatExpenseName(
-                      expense.expense
-                    )}</p>
-                    <p class="text-sm text-gray-500">${this.formatDate(
-                      expense.date
-                    )} • ${this.getCategoryDisplay(expense.expense)}</p>
+        (expense, index) => `
+            <div class="flex justify-between items-center p-3 hover:bg-gray-50 rounded-lg transition-colors">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-gradient-to-r from-blue-400 to-blue-500 rounded-full flex items-center justify-center">
+                        <span class="text-white font-semibold text-sm">${expense.expense
+                          .charAt(0)
+                          .toUpperCase()}</span>
+                    </div>
+                    <div>
+                        <p class="font-medium text-gray-900">${this.formatExpenseName(
+                          expense.expense
+                        )}</p>
+                        <p class="text-sm text-gray-500">${this.formatDate(
+                          expense.date
+                        )} • ${this.getCategoryDisplay(expense.expense)}</p>
+                    </div>
                 </div>
-                <span class="font-semibold text-gray-900">₦${this.formatNumber(
-                  expense.amount
-                )}</span>
+                <div class="text-right">
+                    <span class="font-semibold text-gray-900">₦${this.formatNumber(
+                      expense.amount
+                    )}</span>
+                    <p class="text-xs text-gray-500">${this.getTimeAgo(
+                      expense.date
+                    )}</p>
+                </div>
             </div>
         `
       )
+      .join("");
+  }
+
+  updateDashboardCharts(stats, expenses) {
+    // Create mini trend chart for last 7 days
+    this.createDashboardTrendChart(expenses);
+
+    // Update categories display
+    this.updateDashboardCategories(stats.top_categories || []);
+  }
+
+  createDashboardTrendChart(expenses) {
+    const ctx = document.getElementById("dashboard-trend-chart");
+    if (!ctx) return;
+
+    // Get last 7 days of data
+    const last7Days = this.getLast7DaysData(expenses);
+
+    // Destroy existing chart
+    if (this.dashboardTrendChart) {
+      this.dashboardTrendChart.destroy();
+    }
+
+    const data = {
+      labels: last7Days.map((d) => d.label),
+      datasets: [
+        {
+          data: last7Days.map((d) => d.amount),
+          borderColor: "#3B82F6",
+          backgroundColor: "rgba(59, 130, 246, 0.1)",
+          borderWidth: 2,
+          fill: true,
+          tension: 0.4,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+        },
+      ],
+    };
+
+    this.dashboardTrendChart = new Chart(ctx, {
+      type: "line",
+      data: data,
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (context) => `₦${this.formatNumber(context.parsed.y)}`,
+            },
+          },
+        },
+        scales: {
+          x: { display: false },
+          y: { display: false },
+        },
+        elements: {
+          point: { radius: 0 },
+        },
+      },
+    });
+
+    // Update trend indicator
+    const trendIndicator = document.getElementById("trend-indicator");
+    const trend = this.calculateTrendDirection(last7Days);
+    trendIndicator.textContent = trend.label;
+    trendIndicator.className = `text-sm px-2 py-1 rounded-full ${trend.class}`;
+  }
+
+  updateDashboardCategories(categories) {
+    const container = document.getElementById("dashboard-categories");
+    if (!container) return;
+
+    if (categories.length === 0) {
+      container.innerHTML =
+        '<p class="text-gray-500 text-sm">No category data yet</p>';
+      return;
+    }
+
+    const topCategories = categories.slice(0, 4);
+    const total = categories.reduce(
+      (sum, cat) => sum + (cat.amount || cat.total_amount),
+      0
+    );
+
+    container.innerHTML = topCategories
+      .map((category) => {
+        const amount = category.amount || category.total_amount;
+        const percentage = ((amount / total) * 100).toFixed(1);
+
+        return `
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <div class="w-3 h-3 rounded-full bg-blue-500"></div>
+            <span class="text-sm font-medium text-gray-700">${this.formatCategoryName(
+              category.name
+            )}</span>
+          </div>
+          <div class="text-right">
+            <span class="text-sm font-semibold text-gray-900">₦${this.formatNumber(
+              amount
+            )}</span>
+            <p class="text-xs text-gray-500">${percentage}%</p>
+          </div>
+        </div>
+      `;
+      })
+      .join("");
+  }
+
+  updateDashboardInsights(stats, expenses) {
+    const container = document.getElementById("dashboard-insights");
+    if (!container) return;
+
+    const insights = this.generateSmartInsights(stats, expenses);
+
+    container.innerHTML = insights
+      .map(
+        (insight) => `
+      <div class="flex items-start space-x-2 p-2 bg-gray-50 rounded-lg">
+        <span class="text-lg">${insight.icon}</span>
+        <p class="text-sm text-gray-700">${insight.text}</p>
+      </div>
+    `
+      )
+      .join("");
+  }
+
+  async updateBudgetTracker(stats) {
+    try {
+      const response = await fetch(`${this.apiUrl}/budget`);
+      const budgetData = await response.json();
+
+      if (budgetData.budget_amount > 0) {
+        const percentage = Math.min(budgetData.percentage, 100);
+        const remaining = budgetData.remaining;
+
+        document.getElementById(
+          "budget-percentage"
+        ).textContent = `${percentage.toFixed(1)}%`;
+        document.getElementById(
+          "budget-progress"
+        ).style.width = `${percentage}%`;
+        document.getElementById(
+          "budget-spent"
+        ).textContent = `₦${this.formatNumber(budgetData.spent)}`;
+        document.getElementById(
+          "budget-limit"
+        ).textContent = `₦${this.formatNumber(budgetData.budget_amount)}`;
+
+        const progressBar = document.getElementById("budget-progress");
+        if (percentage > 90) {
+          progressBar.className =
+            "bg-red-500 h-2 rounded-full transition-all duration-300";
+        } else if (percentage > 75) {
+          progressBar.className =
+            "bg-yellow-500 h-2 rounded-full transition-all duration-300";
+        } else {
+          progressBar.className =
+            "bg-blue-500 h-2 rounded-full transition-all duration-300";
+        }
+
+        const statusElement = document.getElementById("budget-status");
+        if (budgetData.over_budget) {
+          statusElement.textContent = `₦${this.formatNumber(
+            Math.abs(remaining)
+          )} over budget`;
+          statusElement.className = "text-sm text-red-600";
+        } else {
+          statusElement.textContent = `₦${this.formatNumber(
+            remaining
+          )} remaining this month`;
+          statusElement.className = "text-sm text-green-600";
+        }
+
+        // Show auto-reset indicator if budget was reset
+        if (budgetData.reset_from_previous) {
+          const resetIndicator = document.createElement("span");
+          resetIndicator.className = "text-xs text-blue-600 ml-2";
+          resetIndicator.textContent = "(Auto-reset)";
+          statusElement.appendChild(resetIndicator);
+        }
+      } else {
+        // No budget set - show default state
+        const monthlySpent = stats.total_spent || 0;
+        document.getElementById("budget-percentage").textContent = "0%";
+        document.getElementById("budget-progress").style.width = "0%";
+        document.getElementById(
+          "budget-spent"
+        ).textContent = `₦${this.formatNumber(monthlySpent)}`;
+        document.getElementById("budget-limit").textContent = "No budget set";
+        document.getElementById("budget-status").textContent =
+          "Set a monthly budget to track your spending goals";
+        document.getElementById("budget-status").className =
+          "text-sm text-gray-600";
+      }
+
+      // Update remove button visibility
+      this.updateRemoveBudgetButton(budgetData.budget_amount > 0);
+    } catch (error) {
+      console.error("Error updating budget tracker:", error);
+      // Fallback to local storage method for backward compatibility
+      this.updateBudgetTrackerFallback(stats);
+    }
+  }
+
+  updateBudgetTrackerFallback(stats) {
+    const budget = this.getBudget();
+    const currentMonth = new Date().toISOString().slice(0, 7);
+    const monthlySpent =
+      stats.monthly_spending?.[currentMonth] || stats.total_spent;
+
+    if (budget > 0) {
+      const percentage = Math.min((monthlySpent / budget) * 100, 100);
+      const remaining = budget - monthlySpent;
+
+      document.getElementById(
+        "budget-percentage"
+      ).textContent = `${percentage.toFixed(1)}%`;
+      document.getElementById("budget-progress").style.width = `${percentage}%`;
+      document.getElementById(
+        "budget-spent"
+      ).textContent = `₦${this.formatNumber(monthlySpent)}`;
+      document.getElementById(
+        "budget-limit"
+      ).textContent = `₦${this.formatNumber(budget)}`;
+
+      const progressBar = document.getElementById("budget-progress");
+      if (percentage > 90) {
+        progressBar.className =
+          "bg-red-500 h-2 rounded-full transition-all duration-300";
+      } else if (percentage > 75) {
+        progressBar.className =
+          "bg-yellow-500 h-2 rounded-full transition-all duration-300";
+      } else {
+        progressBar.className =
+          "bg-blue-500 h-2 rounded-full transition-all duration-300";
+      }
+
+      const statusElement = document.getElementById("budget-status");
+      if (remaining > 0) {
+        statusElement.textContent = `₦${this.formatNumber(
+          remaining
+        )} remaining this month`;
+        statusElement.className = "text-sm text-green-600";
+      } else {
+        statusElement.textContent = `₦${this.formatNumber(
+          Math.abs(remaining)
+        )} over budget`;
+        statusElement.className = "text-sm text-red-600";
+      }
+    } else {
+      // No budget set - show default state
+      const monthlySpent = stats.total_spent || 0;
+      document.getElementById("budget-percentage").textContent = "0%";
+      document.getElementById("budget-progress").style.width = "0%";
+      document.getElementById(
+        "budget-spent"
+      ).textContent = `₦${this.formatNumber(monthlySpent)}`;
+      document.getElementById("budget-limit").textContent = "No budget set";
+      document.getElementById("budget-status").textContent =
+        "Set a monthly budget to track your spending goals";
+      document.getElementById("budget-status").className =
+        "text-sm text-gray-600";
+    }
+
+    this.updateRemoveBudgetButton(budget > 0);
+  }
+
+  updateSpendingGoals(stats) {
+    const container = document.getElementById("spending-goals");
+    if (!container) return;
+
+    const goals = [
+      {
+        name: "Daily Limit",
+        target: 2000,
+        current: stats.daily_average,
+        icon: "📅",
+      },
+      {
+        name: "Food Budget",
+        target: 15000,
+        current:
+          stats.top_categories?.find((c) => c.name.toLowerCase() === "food")
+            ?.amount || 0,
+        icon: "🍽️",
+      },
+      {
+        name: "Transport",
+        target: 8000,
+        current:
+          stats.top_categories?.find(
+            (c) => c.name.toLowerCase() === "transport"
+          )?.amount || 0,
+        icon: "🚗",
+      },
+    ];
+
+    container.innerHTML = goals
+      .map((goal) => {
+        const percentage = Math.min((goal.current / goal.target) * 100, 100);
+        const status = percentage <= 100 ? "On track" : "Over limit";
+        const statusClass =
+          percentage <= 100 ? "text-green-600" : "text-red-600";
+
+        return `
+        <div class="space-y-2">
+          <div class="flex justify-between items-center">
+            <span class="text-sm font-medium text-gray-700">${goal.icon} ${
+          goal.name
+        }</span>
+            <span class="text-xs ${statusClass}">${status}</span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-2">
+            <div class="bg-blue-500 h-2 rounded-full transition-all duration-300" style="width: ${Math.min(
+              percentage,
+              100
+            )}%"></div>
+          </div>
+          <div class="flex justify-between text-xs text-gray-500">
+            <span>₦${this.formatNumber(goal.current)}</span>
+            <span>₦${this.formatNumber(goal.target)}</span>
+          </div>
+        </div>
+      `;
+      })
       .join("");
   }
 
@@ -322,12 +741,16 @@ class QuickLedger {
     }
   }
 
-  async loadExpenses() {
+  async loadExpenses(page = 1) {
     try {
       this.showLoading();
+      this.currentPage = page;
 
       const filter = document.getElementById("expense-filter").value;
-      let params = { limit: 100 };
+      let params = {
+        limit: 1000, // Get more data to handle pagination client-side
+        offset: 0,
+      };
 
       // Apply filters
       switch (filter) {
@@ -348,12 +771,21 @@ class QuickLedger {
       }
 
       const result = await api.getExpenses(params);
-      this.displayExpenses(result.expenses);
+      this.allExpenses = result.expenses || [];
+      this.totalExpenses = this.allExpenses.length;
+
+      // Calculate pagination
+      const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+      const endIndex = startIndex + this.itemsPerPage;
+      const paginatedExpenses = this.allExpenses.slice(startIndex, endIndex);
+
+      this.displayExpenses(paginatedExpenses);
+      this.updatePagination();
 
       // Update count
       document.getElementById("expense-count").textContent = `${
-        result.total
-      } expense${result.total !== 1 ? "s" : ""}`;
+        this.totalExpenses
+      } expense${this.totalExpenses !== 1 ? "s" : ""}`;
     } catch (error) {
       console.error("Error loading expenses:", error);
       this.showToast("Error loading expenses", "error");
@@ -363,62 +795,80 @@ class QuickLedger {
   }
 
   displayExpenses(expenses) {
-    const container = document.getElementById("expenses-list");
-    if (!container) return;
+    const tableBody = document.getElementById("expenses-table-body");
+    const emptyState = document.getElementById("expenses-empty");
+
+    if (!tableBody || !emptyState) return;
 
     if (expenses.length === 0) {
-      container.innerHTML =
-        '<div class="p-6 text-center text-gray-500">No expenses found</div>';
+      tableBody.innerHTML = "";
+      emptyState.classList.remove("hidden");
       return;
     }
 
-    container.innerHTML = expenses
+    emptyState.classList.add("hidden");
+
+    tableBody.innerHTML = expenses
       .map(
         (expense, index) => `
-            <div class="p-4 hover:bg-gray-50 transition-colors">
-                <div class="flex justify-between items-center">
-                    <div class="flex-1">
-                        <div class="flex items-center space-x-3">
-                            <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                                <span class="text-blue-600 font-semibold">${expense.expense
-                                  .charAt(0)
-                                  .toUpperCase()}</span>
-                            </div>
-                            <div>
-                                <p class="font-medium text-gray-900">${this.formatExpenseName(
-                                  expense.expense
-                                )}</p>
-                                <p class="text-sm text-gray-500">${this.formatDate(
-                                  expense.date
-                                )} • ${this.getCategoryDisplay(
-          expense.expense
-        )}</p>
-                            </div>
+            <tr class="hover:bg-gray-50 transition-colors">
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-gradient-to-r from-blue-400 to-blue-500 rounded-full flex items-center justify-center mr-3">
+                            <span class="text-white font-semibold text-sm">${expense.expense
+                              .charAt(0)
+                              .toUpperCase()}</span>
+                        </div>
+                        <div>
+                            <div class="text-sm font-medium text-gray-900">${this.formatExpenseName(
+                              expense.expense
+                            )}</div>
+                            <div class="text-sm text-gray-500">${this.getTimeAgo(
+                              expense.date
+                            )}</div>
                         </div>
                     </div>
-                    <div class="flex items-center space-x-3">
-                        <span class="font-semibold text-lg text-gray-900">₦${this.formatNumber(
-                          expense.amount
-                        )}</span>
-                        <div class="flex space-x-1">
-                            <button onclick="app.editExpense('${
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                        ${this.getCategoryDisplay(expense.expense)}
+                    </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    ${this.formatDate(expense.date)}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right">
+                    <div class="text-sm font-semibold text-gray-900">₦${this.formatNumber(
+                      expense.amount
+                    )}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-center">
+                    <div class="flex justify-center space-x-2">
+                        <button 
+                            onclick="app.editExpense('${
                               expense.date
-                            }', ${index})" class="text-blue-600 hover:text-blue-800 p-1">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                </svg>
-                            </button>
-                            <button onclick="app.deleteExpense('${
+                            }', ${index})" 
+                            class="text-blue-600 hover:text-blue-800 p-1 rounded-md hover:bg-blue-50 transition-colors"
+                            title="Edit expense"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                            </svg>
+                        </button>
+                        <button 
+                            onclick="app.deleteExpense('${
                               expense.date
-                            }', ${index})" class="text-red-600 hover:text-red-800 p-1">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                </svg>
-                            </button>
-                        </div>
+                            }', ${index})" 
+                            class="text-red-600 hover:text-red-800 p-1 rounded-md hover:bg-red-50 transition-colors"
+                            title="Delete expense"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
+                        </button>
                     </div>
-                </div>
-            </div>
+                </td>
+            </tr>
         `
       )
       .join("");
@@ -726,7 +1176,7 @@ class QuickLedger {
     }
   }
 
-  // Utility methods
+  // Enhanced utility methods
   formatNumber(num) {
     return new Intl.NumberFormat("en-NG").format(num);
   }
@@ -748,6 +1198,303 @@ class QuickLedger {
   formatCategoryName(name) {
     if (!name) return "N/A";
     return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+  }
+
+  getTimeAgo(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now - date);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 1) return "Today";
+    if (diffDays === 2) return "Yesterday";
+    if (diffDays <= 7) return `${diffDays - 1} days ago`;
+    return this.formatDate(dateString);
+  }
+
+  calculateSpendingTrend(expenses) {
+    if (expenses.length < 7) return "building trend...";
+
+    const recent =
+      expenses
+        .slice(0, 3)
+        .reduce((sum, exp) => sum + parseFloat(exp.amount), 0) / 3;
+    const older =
+      expenses
+        .slice(3, 6)
+        .reduce((sum, exp) => sum + parseFloat(exp.amount), 0) / 3;
+
+    if (recent > older * 1.1) return "trending up";
+    if (recent < older * 0.9) return "trending down";
+    return "stable";
+  }
+
+  getLast7DaysData(expenses) {
+    const days = [];
+    const today = new Date();
+
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split("T")[0];
+
+      const dayExpenses = expenses.filter((exp) => exp.date === dateStr);
+      const total = dayExpenses.reduce(
+        (sum, exp) => sum + parseFloat(exp.amount),
+        0
+      );
+
+      days.push({
+        date: dateStr,
+        label: date.toLocaleDateString("en-NG", { weekday: "short" }),
+        amount: total,
+      });
+    }
+
+    return days;
+  }
+
+  calculateTrendDirection(last7Days) {
+    const amounts = last7Days.map((d) => d.amount);
+    const firstHalf = amounts.slice(0, 3).reduce((a, b) => a + b, 0) / 3;
+    const secondHalf = amounts.slice(4).reduce((a, b) => a + b, 0) / 3;
+
+    if (secondHalf > firstHalf * 1.2) {
+      return { label: "Rising", class: "bg-red-100 text-red-600" };
+    } else if (secondHalf < firstHalf * 0.8) {
+      return { label: "Falling", class: "bg-green-100 text-green-600" };
+    } else {
+      return { label: "Stable", class: "bg-gray-100 text-gray-600" };
+    }
+  }
+
+  generateSmartInsights(stats, expenses) {
+    const insights = [];
+
+    // Spending pattern insight
+    if (stats.daily_average > 1500) {
+      insights.push({
+        icon: "💡",
+        text: `Your daily average of ₦${this.formatNumber(
+          stats.daily_average
+        )} is above typical range`,
+      });
+    }
+
+    // Category insight
+    const topCategory = stats.most_spent_category;
+    if (topCategory) {
+      const percentage = (
+        (topCategory.amount / stats.total_spent) *
+        100
+      ).toFixed(0);
+      insights.push({
+        icon: "📊",
+        text: `${this.formatCategoryName(
+          topCategory.name
+        )} accounts for ${percentage}% of your spending`,
+      });
+    }
+
+    // Frequency insight
+    if (stats.transaction_count > 30) {
+      insights.push({
+        icon: "🔄",
+        text: `You have ${stats.transaction_count} transactions - consider consolidating similar expenses`,
+      });
+    }
+
+    // Recent activity insight
+    const recentExpenses = expenses.slice(0, 3);
+    if (recentExpenses.length > 0) {
+      const recentTotal = recentExpenses.reduce(
+        (sum, exp) => sum + parseFloat(exp.amount),
+        0
+      );
+      insights.push({
+        icon: "⚡",
+        text: `₦${this.formatNumber(
+          recentTotal
+        )} spent in your last 3 transactions`,
+      });
+    }
+
+    return insights.slice(0, 3); // Show max 3 insights
+  }
+
+  getBudget() {
+    return parseFloat(localStorage.getItem("monthlyBudget") || "0");
+  }
+
+  getPreviousMonth(currentMonth) {
+    const date = new Date(currentMonth + "-01");
+    date.setMonth(date.getMonth() - 1);
+    return date.toISOString().slice(0, 7);
+  }
+
+  updatePagination() {
+    const totalPages = Math.ceil(this.totalExpenses / this.itemsPerPage);
+    const startItem = (this.currentPage - 1) * this.itemsPerPage + 1;
+    const endItem = Math.min(
+      this.currentPage * this.itemsPerPage,
+      this.totalExpenses
+    );
+
+    // Update pagination info
+    document.getElementById("page-start").textContent =
+      this.totalExpenses > 0 ? startItem : 0;
+    document.getElementById("page-end").textContent = endItem;
+    document.getElementById("total-expenses").textContent = this.totalExpenses;
+
+    // Update pagination buttons
+    const prevBtn = document.getElementById("prev-page");
+    const nextBtn = document.getElementById("next-page");
+    const prevBtnMobile = document.getElementById("prev-page-mobile");
+    const nextBtnMobile = document.getElementById("next-page-mobile");
+
+    if (prevBtn && nextBtn && prevBtnMobile && nextBtnMobile) {
+      prevBtn.disabled = this.currentPage <= 1;
+      nextBtn.disabled = this.currentPage >= totalPages;
+      prevBtnMobile.disabled = this.currentPage <= 1;
+      nextBtnMobile.disabled = this.currentPage >= totalPages;
+    }
+
+    // Update page numbers
+    this.updatePageNumbers(totalPages);
+
+    // Show/hide pagination
+    const paginationElement = document.getElementById("expenses-pagination");
+    if (paginationElement) {
+      if (this.totalExpenses <= this.itemsPerPage) {
+        paginationElement.style.display = "none";
+      } else {
+        paginationElement.style.display = "block";
+      }
+    }
+  }
+
+  updatePageNumbers(totalPages) {
+    const pageNumbersContainer = document.getElementById("page-numbers");
+    if (!pageNumbersContainer) return;
+
+    pageNumbersContainer.innerHTML = "";
+
+    // Show max 5 page numbers
+    let startPage = Math.max(1, this.currentPage - 2);
+    let endPage = Math.min(totalPages, startPage + 4);
+
+    if (endPage - startPage < 4) {
+      startPage = Math.max(1, endPage - 4);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      const pageButton = document.createElement("button");
+      pageButton.textContent = i;
+      pageButton.onclick = () => this.changePage(i);
+
+      if (i === this.currentPage) {
+        pageButton.className =
+          "relative inline-flex items-center px-4 py-2 border border-blue-500 bg-blue-50 text-sm font-medium text-blue-600";
+      } else {
+        pageButton.className =
+          "relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50";
+      }
+
+      pageNumbersContainer.appendChild(pageButton);
+    }
+  }
+
+  changePage(direction) {
+    let newPage = this.currentPage;
+
+    if (direction === "prev") {
+      newPage = Math.max(1, this.currentPage - 1);
+    } else if (direction === "next") {
+      const totalPages = Math.ceil(this.totalExpenses / this.itemsPerPage);
+      newPage = Math.min(totalPages, this.currentPage + 1);
+    } else if (typeof direction === "number") {
+      newPage = direction;
+    }
+
+    if (newPage !== this.currentPage) {
+      this.loadExpenses(newPage);
+    }
+  }
+
+  async setBudget() {
+    const budget = prompt("Set your monthly budget (₦):");
+    if (budget && !isNaN(budget) && parseFloat(budget) > 0) {
+      try {
+        const response = await fetch(`${this.apiUrl}/budget?amount=${budget}`, {
+          method: "POST",
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          this.showToast("Budget updated successfully!", "success");
+          // Refresh the dashboard to show updated budget
+          this.loadDashboard();
+        } else {
+          throw new Error("Failed to set budget");
+        }
+      } catch (error) {
+        console.error("Error setting budget:", error);
+        // Fallback to localStorage for backward compatibility
+        localStorage.setItem("monthlyBudget", budget);
+        this.updateBudgetTracker({ total_spent: 0 });
+        this.showToast(
+          "Budget updated successfully! (Local storage)",
+          "success"
+        );
+        this.updateRemoveBudgetButton(true);
+      }
+    }
+  }
+
+  async removeBudget() {
+    if (confirm("Are you sure you want to remove your monthly budget?")) {
+      try {
+        const response = await fetch(`${this.apiUrl}/budget`, {
+          method: "DELETE",
+        });
+
+        if (response.ok) {
+          this.showToast("Budget removed successfully!", "success");
+          // Refresh the dashboard to show updated budget
+          this.loadDashboard();
+        } else {
+          throw new Error("Failed to remove budget");
+        }
+      } catch (error) {
+        console.error("Error removing budget:", error);
+        // Fallback to localStorage for backward compatibility
+        localStorage.removeItem("monthlyBudget");
+        this.updateBudgetTracker({ total_spent: 0 });
+        this.showToast(
+          "Budget removed successfully! (Local storage)",
+          "success"
+        );
+        this.updateRemoveBudgetButton(false);
+      }
+    }
+  }
+
+  updateRemoveBudgetButton(hasBudget = null) {
+    const removeBtn = document.getElementById("remove-budget-btn");
+
+    if (removeBtn) {
+      if (hasBudget === null) {
+        // Check both API and localStorage
+        const localBudget = this.getBudget();
+        hasBudget = localBudget > 0;
+      }
+
+      if (hasBudget) {
+        removeBtn.classList.remove("hidden");
+      } else {
+        removeBtn.classList.add("hidden");
+      }
+    }
   }
 
   getCategoryDisplay(expenseName) {
@@ -863,6 +1610,47 @@ function processNaturalLanguage() {
 
 function processNaturalLanguageAdd() {
   app.processNaturalLanguageAdd();
+}
+
+function switchQuickTab(tab) {
+  const simpleTab = document.getElementById("simple-tab");
+  const smartTab = document.getElementById("smart-tab");
+  const simpleAdd = document.getElementById("simple-quick-add");
+  const smartAdd = document.getElementById("smart-quick-add");
+
+  if (tab === "simple") {
+    simpleTab.className =
+      "flex-1 py-2 px-3 rounded-md text-sm font-medium bg-white text-gray-900 shadow-sm";
+    smartTab.className =
+      "flex-1 py-2 px-3 rounded-md text-sm font-medium text-gray-600 hover:text-gray-900";
+    simpleAdd.classList.remove("hidden");
+    smartAdd.classList.add("hidden");
+  } else {
+    smartTab.className =
+      "flex-1 py-2 px-3 rounded-md text-sm font-medium bg-white text-gray-900 shadow-sm";
+    simpleTab.className =
+      "flex-1 py-2 px-3 rounded-md text-sm font-medium text-gray-600 hover:text-gray-900";
+    smartAdd.classList.remove("hidden");
+    simpleAdd.classList.add("hidden");
+  }
+}
+
+function quickExpenseButton(name, amount) {
+  document.getElementById("quick-expense").value = name;
+  document.getElementById("quick-amount").value = amount;
+  app.quickAddExpense();
+}
+
+function setBudget() {
+  app.setBudget();
+}
+
+function removeBudget() {
+  app.removeBudget();
+}
+
+function changePage(direction) {
+  app.changePage(direction);
 }
 
 // Initialize app when DOM is loaded
