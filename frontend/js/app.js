@@ -163,33 +163,19 @@ class QuickLedger {
   }
 
   updateEnhancedDashboardStats(stats, allExpenses, weekExpenses) {
-    // Ensure allExpenses is an array
-    const expenses = Array.isArray(allExpenses) ? allExpenses : [];
-
-    // Calculate monthly expenses
+    // Use the backend-calculated monthly spending
     const currentMonth = new Date().toISOString().slice(0, 7);
-    const monthlyExpenses = expenses.filter(
-      (exp) => exp.date && exp.date.startsWith(currentMonth)
-    );
-    const monthlyTotal = monthlyExpenses.reduce(
-      (sum, exp) => sum + parseFloat(exp.amount || 0),
-      0
-    );
+    const monthlyTotal = stats.current_month_spent || 0;
 
     document.getElementById(
       "monthly-spent"
     ).textContent = `₦${this.formatNumber(monthlyTotal)}`;
 
-    // Calculate monthly change (simplified - compare with previous month if available)
+    // Calculate monthly change using backend monthly_spending data
     const changeElement = document.getElementById("monthly-change");
     const previousMonth = this.getPreviousMonth(currentMonth);
-    const previousMonthExpenses = expenses.filter(
-      (exp) => exp.date && exp.date.startsWith(previousMonth)
-    );
-    const previousMonthTotal = previousMonthExpenses.reduce(
-      (sum, exp) => sum + parseFloat(exp.amount || 0),
-      0
-    );
+    const monthlySpending = stats.monthly_spending || {};
+    const previousMonthTotal = monthlySpending[previousMonth] || 0;
 
     if (previousMonthTotal > 0) {
       const change =
@@ -409,7 +395,7 @@ class QuickLedger {
 
   async updateBudgetTracker(stats) {
     try {
-      const response = await fetch(`${this.apiUrl}/budget`);
+      const response = await fetch(`${api.baseURL}/budget`);
       const budgetData = await response.json();
 
       if (budgetData.budget_amount > 0) {
@@ -462,8 +448,8 @@ class QuickLedger {
           statusElement.appendChild(resetIndicator);
         }
       } else {
-        // No budget set - show default state
-        const monthlySpent = stats.total_spent || 0;
+        // No budget set - show current month spending
+        const monthlySpent = stats.current_month_spent || 0;
         document.getElementById("budget-percentage").textContent = "0%";
         document.getElementById("budget-progress").style.width = "0%";
         document.getElementById(
@@ -488,8 +474,7 @@ class QuickLedger {
   updateBudgetTrackerFallback(stats) {
     const budget = this.getBudget();
     const currentMonth = new Date().toISOString().slice(0, 7);
-    const monthlySpent =
-      stats.monthly_spending?.[currentMonth] || stats.total_spent;
+    const monthlySpent = stats.current_month_spent || 0;
 
     if (budget > 0) {
       const percentage = Math.min((monthlySpent / budget) * 100, 100);
@@ -531,8 +516,8 @@ class QuickLedger {
         statusElement.className = "text-sm text-red-600";
       }
     } else {
-      // No budget set - show default state
-      const monthlySpent = stats.total_spent || 0;
+      // No budget set - show current month spending
+      const monthlySpent = stats.current_month_spent || 0;
       document.getElementById("budget-percentage").textContent = "0%";
       document.getElementById("budget-progress").style.width = "0%";
       document.getElementById(
@@ -885,12 +870,195 @@ class QuickLedger {
       ]);
 
       this.displayEnhancedAnalytics(stats, expenses.expenses);
+      this.populateMonthSelector(stats.monthly_spending || {});
+
+      // Load current month breakdown by default
+      const currentMonth = new Date().toISOString().slice(0, 7);
+      await this.loadMonthlyBreakdown(currentMonth);
     } catch (error) {
       console.error("Error loading analytics:", error);
       this.showToast("Error loading analytics", "error");
     } finally {
       this.hideLoading();
     }
+  }
+
+  populateMonthSelector(monthlySpending) {
+    const selector = document.getElementById("month-selector");
+    if (!selector) return;
+
+    const months = Object.keys(monthlySpending).sort().reverse();
+    const currentMonth = new Date().toISOString().slice(0, 7);
+
+    // Add current month if not in list
+    if (!months.includes(currentMonth)) {
+      months.unshift(currentMonth);
+    }
+
+    selector.innerHTML = months
+      .map((month) => {
+        const date = new Date(month + "-01");
+        const label = date.toLocaleDateString("en-NG", {
+          year: "numeric",
+          month: "long",
+        });
+        return `<option value="${month}" ${
+          month === currentMonth ? "selected" : ""
+        }>${label}</option>`;
+      })
+      .join("");
+  }
+
+  async loadMonthlyBreakdown(month) {
+    const container = document.getElementById("monthly-breakdown-content");
+
+    if (!container) {
+      console.error("Monthly breakdown container not found");
+      return;
+    }
+
+    // Show loading state
+    container.innerHTML = `
+      <div class="text-center py-8">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+        <p class="text-gray-500">Loading monthly data...</p>
+      </div>
+    `;
+
+    try {
+      const response = await fetch(`${api.baseURL}/monthly/${month}`);
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      this.displayMonthlyBreakdown(data);
+    } catch (error) {
+      console.error("Error loading monthly breakdown:", error);
+      this.showToast("Error loading monthly data", "error");
+
+      // Show error in the container
+      container.innerHTML = `
+        <div class="text-center py-8">
+          <p class="text-red-600 mb-2">Failed to load monthly data</p>
+          <p class="text-gray-500 text-sm">${error.message}</p>
+        </div>
+      `;
+    }
+  }
+
+  displayMonthlyBreakdown(data) {
+    const container = document.getElementById("monthly-breakdown-content");
+    if (!container) return;
+
+    const categories = Object.entries(data.categories || {}).sort(
+      (a, b) => b[1] - a[1]
+    );
+
+    container.innerHTML = `
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div class="bg-blue-50 rounded-lg p-4">
+          <p class="text-sm text-blue-600 font-medium">Total Spent</p>
+          <p class="text-2xl font-bold text-blue-900">₦${this.formatNumber(
+            data.total_spent
+          )}</p>
+          <p class="text-xs text-blue-600 mt-1">${
+            data.transaction_count
+          } transactions</p>
+        </div>
+        <div class="bg-green-50 rounded-lg p-4">
+          <p class="text-sm text-green-600 font-medium">Daily Average</p>
+          <p class="text-2xl font-bold text-green-900">₦${this.formatNumber(
+            data.daily_average
+          )}</p>
+          <p class="text-xs text-green-600 mt-1">${
+            data.days_tracked
+          } days tracked</p>
+        </div>
+        <div class="bg-purple-50 rounded-lg p-4">
+          <p class="text-sm text-purple-600 font-medium">Top Category</p>
+          <p class="text-2xl font-bold text-purple-900">${
+            categories.length > 0
+              ? this.formatCategoryName(categories[0][0])
+              : "N/A"
+          }</p>
+          <p class="text-xs text-purple-600 mt-1">${
+            categories.length > 0
+              ? "₦" + this.formatNumber(categories[0][1])
+              : "No data"
+          }</p>
+        </div>
+      </div>
+
+      <div class="mb-6">
+        <h4 class="text-md font-semibold text-gray-900 mb-4">Spending by Category</h4>
+        <div class="space-y-3">
+          ${
+            categories.length > 0
+              ? categories
+                  .map((cat) => {
+                    const [name, amount] = cat;
+                    const percentage = (
+                      (amount / data.total_spent) *
+                      100
+                    ).toFixed(1);
+                    return `
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div class="flex-1">
+                        <div class="flex justify-between items-center mb-1">
+                          <span class="font-medium text-gray-900">${this.formatCategoryName(
+                            name
+                          )}</span>
+                          <span class="text-sm font-semibold text-gray-900">₦${this.formatNumber(
+                            amount
+                          )}</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                          <div class="bg-blue-500 h-2 rounded-full" style="width: ${percentage}%"></div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">${percentage}% of total</p>
+                      </div>
+                    </div>
+                  `;
+                  })
+                  .join("")
+              : '<p class="text-gray-500 text-center py-4">No expenses for this month</p>'
+          }
+        </div>
+      </div>
+
+      <div>
+        <h4 class="text-md font-semibold text-gray-900 mb-4">Top Expenses</h4>
+        <div class="space-y-2">
+          ${
+            data.top_expenses && data.top_expenses.length > 0
+              ? data.top_expenses
+                  .map(
+                    (exp, index) => `
+                  <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div class="flex items-center space-x-3">
+                      <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                        <span class="text-blue-600 font-bold text-sm">${
+                          index + 1
+                        }</span>
+                      </div>
+                      <span class="font-medium text-gray-900">${this.formatExpenseName(
+                        exp.name
+                      )}</span>
+                    </div>
+                    <span class="font-semibold text-gray-900">₦${this.formatNumber(
+                      exp.amount
+                    )}</span>
+                  </div>
+                `
+                  )
+                  .join("")
+              : '<p class="text-gray-500 text-center py-4">No expenses for this month</p>'
+          }
+        </div>
+      </div>
+    `;
   }
 
   displayEnhancedAnalytics(stats, expenses) {
@@ -1425,7 +1593,7 @@ class QuickLedger {
     const budget = prompt("Set your monthly budget (₦):");
     if (budget && !isNaN(budget) && parseFloat(budget) > 0) {
       try {
-        const response = await fetch(`${this.apiUrl}/budget?amount=${budget}`, {
+        const response = await fetch(`${api.baseURL}/budget?amount=${budget}`, {
           method: "POST",
         });
 
@@ -1454,7 +1622,7 @@ class QuickLedger {
   async removeBudget() {
     if (confirm("Are you sure you want to remove your monthly budget?")) {
       try {
-        const response = await fetch(`${this.apiUrl}/budget`, {
+        const response = await fetch(`${api.baseURL}/budget`, {
           method: "DELETE",
         });
 
@@ -1651,6 +1819,12 @@ function removeBudget() {
 
 function changePage(direction) {
   app.changePage(direction);
+}
+
+function loadMonthlyBreakdown(month) {
+  if (app) {
+    app.loadMonthlyBreakdown(month);
+  }
 }
 
 // Initialize app when DOM is loaded

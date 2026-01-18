@@ -260,7 +260,7 @@
               <div
                 class="w-12 h-12 bg-blue-400 rounded-full flex items-center justify-center"
               >
-                <span class="text-xl">�</sspan>
+                <span class="text-xl">💰</span>
               </div>
             </div>
           </div>
@@ -685,40 +685,73 @@
             <table class="min-w-full divide-y divide-gray-200">
               <thead class="bg-gray-50">
                 <tr>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
                     Expense
                   </th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
                     Category
                   </th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
                     Date
                   </th>
-                  <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th
+                    class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
                     Amount
                   </th>
-                  <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th
+                    class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody id="expenses-table-body" class="bg-white divide-y divide-gray-200">
+              <tbody
+                id="expenses-table-body"
+                class="bg-white divide-y divide-gray-200"
+              >
                 <!-- Expenses will be loaded here -->
               </tbody>
             </table>
-            <div id="expenses-empty" class="hidden p-8 text-center text-gray-500">
+            <div
+              id="expenses-empty"
+              class="hidden p-8 text-center text-gray-500"
+            >
               <div class="flex flex-col items-center">
-                <svg class="w-12 h-12 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                <svg
+                  class="w-12 h-12 text-gray-300 mb-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                  ></path>
                 </svg>
-                <p class="text-lg font-medium text-gray-900 mb-2">No expenses found</p>
-                <p class="text-gray-500">Start tracking your expenses by adding your first entry</p>
+                <p class="text-lg font-medium text-gray-900 mb-2">
+                  No expenses found
+                </p>
+                <p class="text-gray-500">
+                  Start tracking your expenses by adding your first entry
+                </p>
               </div>
             </div>
           </div>
-          
+
           <!-- Pagination -->
-          <div id="expenses-pagination" class="bg-gray-50 px-4 py-3 border-t border-gray-200 sm:px-6">
+          <div
+            id="expenses-pagination"
+            class="bg-gray-50 px-4 py-3 border-t border-gray-200 sm:px-6"
+          >
             <div class="flex items-center justify-between">
               <div class="flex-1 flex justify-between sm:hidden">
                 <button
@@ -738,7 +771,9 @@
                   Next
                 </button>
               </div>
-              <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+              <div
+                class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between"
+              >
                 <div>
                   <p class="text-sm text-gray-700">
                     Showing
@@ -751,7 +786,10 @@
                   </p>
                 </div>
                 <div>
-                  <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                  <nav
+                    class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
+                    aria-label="Pagination"
+                  >
                     <button
                       id="prev-page"
                       onclick="changePage('prev')"
@@ -759,8 +797,16 @@
                       disabled
                     >
                       <span class="sr-only">Previous</span>
-                      <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                      <svg
+                        class="h-5 w-5"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                          clip-rule="evenodd"
+                        />
                       </svg>
                     </button>
                     <div id="page-numbers" class="flex">
@@ -773,8 +819,16 @@
                       disabled
                     >
                       <span class="sr-only">Next</span>
-                      <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                      <svg
+                        class="h-5 w-5"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                          clip-rule="evenodd"
+                        />
                       </svg>
                     </button>
                   </nav>
@@ -942,7 +996,7 @@
         </div>
 
         <!-- Detailed Statistics Table -->
-        <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
           <h3 class="text-lg font-semibold text-gray-900 mb-6">
             📈 Detailed Statistics
           </h3>
@@ -974,6 +1028,26 @@
                 <!-- Stats table will be loaded here -->
               </tbody>
             </table>
+          </div>
+        </div>
+
+        <!-- Monthly Breakdown Section -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <div class="flex justify-between items-center mb-6">
+            <h3 class="text-lg font-semibold text-gray-900">
+              📅 Monthly Breakdown
+            </h3>
+            <select
+              id="month-selector"
+              onchange="loadMonthlyBreakdown(this.value)"
+              class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <!-- Months will be populated here -->
+            </select>
+          </div>
+
+          <div id="monthly-breakdown-content">
+            <!-- Monthly breakdown will be loaded here -->
           </div>
         </div>
       </div>

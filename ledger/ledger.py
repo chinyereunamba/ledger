@@ -62,6 +62,8 @@ def load_ledger(mode: str):
 
 def add_expense(expense: Optional[str], amount: Optional[float]):
 
+    expense = expense.strip().title()
+
     date_key = datetime.now().strftime("%Y-%m-%d")
     expense_item = {
         "expense": expense,

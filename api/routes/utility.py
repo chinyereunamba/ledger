@@ -3,6 +3,7 @@ Utility routes (health check, API info, etc.)
 """
 from fastapi import APIRouter
 from models import HealthResponse, APIInfoResponse
+from ledger.ledger import load_categories
 
 router = APIRouter(tags=["utility"])
 
@@ -13,6 +14,10 @@ async def health_check():
         status="healthy",
         message="Ledger API is running"
     )
+
+@router.get("/categories")
+async def get_categories():
+    return load_categories()  # From ledger.py
 
 @router.get("/", response_model=APIInfoResponse)
 async def root():
