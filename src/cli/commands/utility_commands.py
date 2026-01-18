@@ -5,7 +5,7 @@ from rich import print as rprint
 from datetime import datetime
 
 from ...ledger.config import get_settings
-from ...ledger.repositories import FileManager
+from ...ledger.repositories.file_manager import FileManager
 from ..presenters import TableFormatter
 
 

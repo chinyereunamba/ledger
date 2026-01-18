@@ -4,7 +4,7 @@ import typer
 from typing import Optional
 from rich import print as rprint
 
-from ...ledger.services import BudgetService
+from ...ledger.services.budget_service import BudgetService
 from ..presenters import TableFormatter
 
 

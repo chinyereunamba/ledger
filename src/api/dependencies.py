@@ -2,19 +2,15 @@
 
 from functools import lru_cache
 
-from ..ledger.repositories import (
-    ExpenseRepository,
-    CategoryRepository,
-    BudgetRepository,
-    UserRepository,
-)
-from ..ledger.services import (
-    ExpenseService,
-    CategoryService,
-    BudgetService,
-    AnalyticsService,
-    UserService,
-)
+from ..ledger.repositories.expense_repository import ExpenseRepository
+from ..ledger.repositories.category_repository import CategoryRepository
+from ..ledger.repositories.budget_repository import BudgetRepository
+from ..ledger.repositories.user_repository import UserRepository
+from ..ledger.services.expense_service import ExpenseService
+from ..ledger.services.category_service import CategoryService
+from ..ledger.services.budget_service import BudgetService
+from ..ledger.services.analytics_service import AnalyticsService
+from ..ledger.services.user_service import UserService
 
 
 @lru_cache()

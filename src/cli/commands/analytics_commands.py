@@ -6,7 +6,8 @@ from rich import print as rprint
 import pandas as pd
 from datetime import datetime
 
-from ...ledger.services import AnalyticsService, ExpenseService
+from ...ledger.services.analytics_service import AnalyticsService
+from ...ledger.services.expense_service import ExpenseService
 from ..presenters import TableFormatter
 
 

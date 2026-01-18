@@ -4,14 +4,14 @@ import typer
 from rich import print as rprint
 import json
 
-from ...ledger.services import (
+from ..ledger.services import (
     ExpenseService,
     CategoryService,
     BudgetService,
     AnalyticsService,
     UserService,
 )
-from ...ledger.config import get_settings
+from ..ledger.config import get_settings
 from .commands.expense_commands import register_expense_commands
 from .commands.analytics_commands import register_analytics_commands
 from .commands.budget_commands import register_budget_commands

@@ -3,7 +3,7 @@
 import typer
 from rich import print as rprint
 
-from ...ledger.services import UserService
+from ...ledger.services.user_service import UserService
 
 
 def register_user_commands(app: typer.Typer, user_service: UserService):
