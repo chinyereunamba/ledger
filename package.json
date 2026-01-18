@@ -1,0 +1,24 @@
+{
+  "name": "quickledger-pwa",
+  "version": "1.0.0",
+  "description": "Smart expense tracker PWA with FastAPI backend",
+  "scripts": {
+    "dev": "concurrently \"npm run api\" \"npm run frontend\"",
+    "api": "cd src/api && uvicorn main:app --reload --host 0.0.0.0 --port 8000",
+    "frontend": "cd frontend && python3 -m http.server 3000",
+    "start": "npm run dev",
+    "build": "echo 'Building PWA...' && cp -r frontend dist/",
+    "install-deps": "pip install -r requirements.txt"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "keywords": [
+    "pwa",
+    "expense-tracker",
+    "fastapi",
+    "python"
+  ],
+  "author": "",
+  "license": "MIT"
+}

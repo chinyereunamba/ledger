@@ -8,27 +8,63 @@ This document describes the refactored architecture of the QuickLedger applicati
 
 ```
 ledger/
-├── src/
-│   ├── ledger/                    # Core package
-│   │   ├── config/                # Configuration management
-│   │   ├── domain/                # Domain models (pure Python)
-│   │   ├── services/              # Business logic layer
-│   │   ├── repositories/          # Data access layer
-│   │   └── parsers/               # NLP parsing
-│   ├── api/                       # API layer (FastAPI)
-│   │   ├── models/                # API models (Pydantic)
-│   │   ├── routes/                # API routes
-│   │   ├── dependencies.py        # Dependency injection
-│   │   └── main.py                # FastAPI app
-│   └── cli/                       # CLI layer
-│       ├── commands/               # CLI commands
-│       ├── presenters/             # CLI presentation
-│       └── main.py                 # CLI entry point
-├── tests/                         # Test suite
-│   ├── unit/                      # Unit tests
-│   ├── integration/               # Integration tests
-│   └── conftest.py                # Pytest fixtures
-└── frontend/                      # Frontend (unchanged)
+├── src/                          # Source code
+│   ├── ledger/                  # Core business logic
+│   │   ├── config/              # Configuration management
+│   │   ├── domain/              # Domain models
+│   │   ├── services/             # Business logic layer
+│   │   ├── repositories/        # Data access layer
+│   │   └── parsers/             # NLP parsing
+│   ├── api/                     # FastAPI application
+│   │   ├── models/              # API models (Pydantic)
+│   │   ├── routes/              # API routes
+│   │   ├── dependencies.py      # Dependency injection
+│   │   └── main.py              # FastAPI app entry point
+│   └── cli/                     # CLI interface
+│       ├── commands/            # CLI commands
+│       ├── presenters/         # CLI presentation
+│       └── main.py             # CLI entry point
+│
+├── tests/                        # Test suite
+│   ├── unit/                    # Unit tests
+│   ├── integration/             # Integration tests
+│   └── conftest.py             # Pytest fixtures
+│
+├── frontend/                     # Frontend application
+│   ├── js/                      # JavaScript files
+│   ├── icons/                   # Application icons
+│   └── index.html               # Main HTML file
+│
+├── scripts/                      # Development & utility scripts
+│   ├── dev.py                   # Development server runner
+│   ├── run.sh                   # Shell script runner
+│   ├── quickledger-launcher.py  # GUI launcher
+│   └── [other utility scripts]
+│
+├── docker/                       # Docker configuration
+│   ├── Dockerfile.api          # API Docker image
+│   ├── Dockerfile.frontend     # Frontend Docker image
+│   └── docker-compose.yml     # Docker Compose config
+│
+├── config/                       # Application configuration
+│   └── nginx.conf               # Nginx configuration
+│
+├── ledger/                       # Legacy compatibility
+│   └── __init__.py             # Backward compatibility exports
+│
+├── Configuration Files (Root)
+│   ├── pyproject.toml          # Poetry/Python package config
+│   ├── poetry.lock             # Dependency lock file
+│   ├── requirements.txt        # Python dependencies
+│   ├── pytest.ini             # Pytest configuration
+│   ├── package.json            # Node.js configuration
+│   ├── Makefile                # Build automation
+│   └── .gitignore              # Git ignore rules
+│
+└── Documentation
+    ├── README.md               # Main documentation
+    ├── ARCHITECTURE.md         # Architecture documentation
+    └── LICENSE                 # License file
 ```
 
 ## Architecture Layers

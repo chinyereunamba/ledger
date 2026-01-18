@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -44,10 +44,47 @@
 
     <!-- Custom Styles -->
     <style>
+      /* Dark mode variables */
+      :root {
+        --bg-primary: #ffffff;
+        --bg-secondary: #f9fafb;
+        --text-primary: #111827;
+        --text-secondary: #6b7280;
+        --border-color: #e5e7eb;
+        --card-bg: #ffffff;
+      }
+
+      [data-theme="dark"] {
+        --bg-primary: #1f2937;
+        --bg-secondary: #111827;
+        --text-primary: #f9fafb;
+        --text-secondary: #d1d5db;
+        --border-color: #374151;
+        --card-bg: #374151;
+      }
+
+      body {
+        background-color: var(--bg-secondary);
+        color: var(--text-primary);
+        transition:
+          background-color 0.3s ease,
+          color 0.3s ease;
+      }
+
+      .card-bg {
+        background-color: var(--card-bg);
+        border-color: var(--border-color);
+      }
+
       .glass {
         background: rgba(255, 255, 255, 0.1);
         backdrop-filter: blur(10px);
         border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      [data-theme="dark"] .glass {
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.1);
       }
 
       .gradient-bg {
@@ -56,11 +93,17 @@
 
       .expense-card {
         transition: all 0.3s ease;
+        background-color: var(--card-bg);
+        border-color: var(--border-color);
       }
 
       .expense-card:hover {
         transform: translateY(-2px);
         box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      }
+
+      [data-theme="dark"] .expense-card:hover {
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
       }
 
       .loading {
@@ -85,12 +128,17 @@
       .dashboard-card {
         transition: all 0.3s ease;
         border: 1px solid transparent;
+        background-color: var(--card-bg);
       }
 
       .dashboard-card:hover {
         transform: translateY(-1px);
         box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
         border-color: rgba(59, 130, 246, 0.2);
+      }
+
+      [data-theme="dark"] .dashboard-card:hover {
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
       }
 
       .quick-expense-btn {
@@ -122,12 +170,17 @@
 
       .expense-table-row {
         transition: all 0.2s ease;
+        background-color: var(--card-bg);
       }
 
       .expense-table-row:hover {
-        background-color: #f9fafb;
+        background-color: var(--bg-secondary);
         transform: translateY(-1px);
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      }
+
+      [data-theme="dark"] .expense-table-row:hover {
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
       }
 
       .action-button {
@@ -136,6 +189,91 @@
 
       .action-button:hover {
         transform: scale(1.1);
+      }
+
+      /* Enhanced search and filter styles */
+      .search-highlight {
+        background-color: #fef3c7;
+        padding: 0 2px;
+        border-radius: 2px;
+      }
+
+      [data-theme="dark"] .search-highlight {
+        background-color: #92400e;
+        color: #fbbf24;
+      }
+
+      /* Bulk selection styles */
+      .expense-row-selected {
+        background-color: #dbeafe !important;
+        border-left: 4px solid #3b82f6;
+      }
+
+      [data-theme="dark"] .expense-row-selected {
+        background-color: #1e3a8a !important;
+        border-left: 4px solid #60a5fa;
+      }
+
+      /* Modal styles for dark mode */
+      [data-theme="dark"] .modal-content {
+        background-color: var(--card-bg);
+        color: var(--text-primary);
+      }
+
+      /* Form inputs dark mode */
+      [data-theme="dark"] input,
+      [data-theme="dark"] select,
+      [data-theme="dark"] textarea {
+        background-color: var(--bg-secondary);
+        border-color: var(--border-color);
+        color: var(--text-primary);
+      }
+
+      [data-theme="dark"] input:focus,
+      [data-theme="dark"] select:focus,
+      [data-theme="dark"] textarea:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      }
+
+      /* Enhanced animations */
+      .fade-in {
+        animation: fadeIn 0.3s ease-in;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      .scale-in {
+        animation: scaleIn 0.2s ease-out;
+      }
+
+      @keyframes scaleIn {
+        from {
+          opacity: 0;
+          transform: scale(0.95);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      /* Keyboard shortcuts indicator */
+      .keyboard-shortcut {
+        font-size: 0.75rem;
+        background-color: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        padding: 2px 6px;
+        margin-left: 8px;
+        opacity: 0.7;
       }
     </style>
   </head>
@@ -174,6 +312,20 @@
                 class="bg-white bg-opacity-20 px-3 py-2 rounded-md text-sm font-medium hover:bg-opacity-30 transition-colors"
               >
                 Add Expense
+              </button>
+              <button
+                onclick="showImportModal()"
+                class="px-3 py-2 rounded-md text-sm font-medium hover:bg-white hover:bg-opacity-20 transition-colors"
+                title="Import expenses from file"
+              >
+                📥 Import
+              </button>
+              <button
+                onclick="showNotificationSettings()"
+                class="px-3 py-2 rounded-md text-sm font-medium hover:bg-white hover:bg-opacity-20 transition-colors"
+                title="Notification settings"
+              >
+                🔔 Settings
               </button>
             </div>
           </div>
@@ -226,6 +378,18 @@
             class="block px-3 py-2 rounded-md text-base font-medium hover:bg-white hover:bg-opacity-20 w-full text-left"
           >
             Add Expense
+          </button>
+          <button
+            onclick="showImportModal()"
+            class="block px-3 py-2 rounded-md text-base font-medium hover:bg-white hover:bg-opacity-20 w-full text-left"
+          >
+            📥 Import
+          </button>
+          <button
+            onclick="showNotificationSettings()"
+            class="block px-3 py-2 rounded-md text-base font-medium hover:bg-white hover:bg-opacity-20 w-full text-left"
+          >
+            🔔 Settings
           </button>
         </div>
       </div>
@@ -399,9 +563,19 @@
 
           <!-- Enhanced Quick Actions -->
           <div class="bg-white rounded-lg shadow-md p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">
-              ⚡ Quick Actions
-            </h3>
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-lg font-semibold text-gray-900">
+                ⚡ Quick Actions
+              </h3>
+              <button
+                onclick="toggleDarkMode()"
+                id="dark-mode-toggle"
+                class="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                title="Toggle dark mode"
+              >
+                <span id="dark-mode-icon">🌙</span>
+              </button>
+            </div>
 
             <!-- Quick Add Tabs -->
             <div class="flex mb-4 bg-gray-100 rounded-lg p-1">
@@ -654,6 +828,53 @@
             <p class="text-gray-600">View and manage your expense history</p>
           </div>
           <div class="flex space-x-2">
+            <!-- Search Input -->
+            <div class="relative">
+              <input
+                type="text"
+                id="expense-search"
+                placeholder="Search expenses..."
+                class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-64"
+              />
+              <svg
+                class="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+            </div>
+            <!-- Category Filter -->
+            <select
+              id="category-filter"
+              class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">All Categories</option>
+              <option value="food">Food</option>
+              <option value="transport">Transport</option>
+              <option value="data">Data</option>
+              <option value="utilities">Utilities</option>
+              <option value="other">Other</option>
+            </select>
+            <!-- Amount Range Filter -->
+            <select
+              id="amount-filter"
+              class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">All Amounts</option>
+              <option value="0-500">₦0 - ₦500</option>
+              <option value="500-1000">₦500 - ₦1,000</option>
+              <option value="1000-2000">₦1,000 - ₦2,000</option>
+              <option value="2000-5000">₦2,000 - ₦5,000</option>
+              <option value="5000+">₦5,000+</option>
+            </select>
+            <!-- Date Filter -->
             <select
               id="expense-filter"
               class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -663,6 +884,26 @@
               <option value="week">This Week</option>
               <option value="month">This Month</option>
             </select>
+            <!-- Export Button -->
+            <button
+              onclick="showExportModal()"
+              class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors flex items-center space-x-2"
+            >
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                ></path>
+              </svg>
+              <span>Export</span>
+            </button>
             <button
               onclick="loadExpenses()"
               class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
@@ -676,15 +917,48 @@
           <div class="p-6 border-b border-gray-200">
             <div class="flex justify-between items-center">
               <h3 class="text-lg font-semibold text-gray-900">Expense List</h3>
-              <span id="expense-count" class="text-sm text-gray-500"
-                >0 expenses</span
-              >
+              <div class="flex items-center space-x-4">
+                <span id="expense-count" class="text-sm text-gray-500"
+                  >0 expenses</span
+                >
+                <!-- Bulk Actions -->
+                <div
+                  id="bulk-actions"
+                  class="hidden flex items-center space-x-2"
+                >
+                  <span id="selected-count" class="text-sm text-blue-600"
+                    >0 selected</span
+                  >
+                  <button
+                    onclick="bulkDeleteExpenses()"
+                    class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 transition-colors"
+                  >
+                    Delete Selected
+                  </button>
+                  <button
+                    onclick="clearSelection()"
+                    class="bg-gray-500 text-white px-3 py-1 rounded text-sm hover:bg-gray-600 transition-colors"
+                  >
+                    Clear
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
           <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
               <thead class="bg-gray-50">
                 <tr>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    <input
+                      type="checkbox"
+                      id="select-all"
+                      onchange="toggleSelectAll()"
+                      class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                  </th>
                   <th
                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                   >
@@ -1032,7 +1306,7 @@
         </div>
 
         <!-- Monthly Breakdown Section -->
-        <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="bg-white rounded-lg shadow-md p-6 breakdown">
           <div class="flex justify-between items-center mb-6">
             <h3 class="text-lg font-semibold text-gray-900">
               📅 Monthly Breakdown
@@ -1058,6 +1332,166 @@
       <!-- Toasts will be added here -->
     </div>
 
+    <!-- Export Modal -->
+    <div
+      id="export-modal"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden"
+    >
+      <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-semibold text-gray-900">Export Expenses</h3>
+          <button
+            onclick="closeExportModal()"
+            class="text-gray-400 hover:text-gray-600"
+          >
+            <svg
+              class="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              ></path>
+            </svg>
+          </button>
+        </div>
+
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2"
+              >Export Format</label
+            >
+            <select
+              id="export-format"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="csv">CSV (Excel compatible)</option>
+              <option value="json">JSON (Backup format)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2"
+              >Date Range</label
+            >
+            <select
+              id="export-range"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">All Time</option>
+              <option value="month">This Month</option>
+              <option value="week">This Week</option>
+              <option value="custom">Custom Range</option>
+            </select>
+          </div>
+
+          <div id="custom-date-range" class="hidden space-y-2">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1"
+                >Start Date</label
+              >
+              <input
+                type="date"
+                id="export-start-date"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1"
+                >End Date</label
+              >
+              <input
+                type="date"
+                id="export-end-date"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+
+          <div class="flex space-x-3 pt-4">
+            <button
+              onclick="exportExpenses()"
+              class="flex-1 bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition-colors"
+            >
+              Export
+            </button>
+            <button
+              onclick="closeExportModal()"
+              class="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Import Modal -->
+    <div
+      id="import-modal"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden"
+    >
+      <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-semibold text-gray-900">Import Expenses</h3>
+          <button
+            onclick="closeImportModal()"
+            class="text-gray-400 hover:text-gray-600"
+          >
+            <svg
+              class="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              ></path>
+            </svg>
+          </button>
+        </div>
+
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2"
+              >Select File</label
+            >
+            <input
+              type="file"
+              id="import-file"
+              accept=".json,.csv"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <p class="text-xs text-gray-500 mt-1">
+              Supports JSON and CSV files
+            </p>
+          </div>
+
+          <div class="flex space-x-3 pt-4">
+            <button
+              onclick="importExpenses()"
+              class="flex-1 bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600 transition-colors"
+            >
+              Import
+            </button>
+            <button
+              onclick="closeImportModal()"
+              class="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Loading Overlay -->
     <div
       id="loading-overlay"
@@ -1076,5 +1510,8 @@
     <script src="js/api.js"></script>
     <script src="js/charts.js"></script>
     <script src="js/pwa.js"></script>
+    <script src="js/enhanced-features-fixed.js"></script>
+    <script src="js/budget-manager-simple.js"></script>
+    <script src="js/notification-simple.js"></script>
   </body>
 </html>

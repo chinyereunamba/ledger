@@ -1,0 +1,11 @@
+FROM nginx:alpine
+
+# Copy frontend files
+COPY frontend/ /usr/share/nginx/html/
+
+# Copy nginx config
+COPY config/nginx.conf /etc/nginx/nginx.conf
+
+EXPOSE 3000
+
+CMD ["nginx", "-g", "daemon off;"]

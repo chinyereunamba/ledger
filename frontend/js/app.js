@@ -146,7 +146,7 @@ class QuickLedger {
       this.updateEnhancedDashboardStats(
         stats,
         allExpenses.expenses || [],
-        weekExpenses.expenses
+        weekExpenses.expenses,
       );
       this.updateRecentExpenses(recentExpenses.expenses);
       this.updateDashboardCharts(stats, recentExpenses.expenses);
@@ -167,9 +167,8 @@ class QuickLedger {
     const currentMonth = new Date().toISOString().slice(0, 7);
     const monthlyTotal = stats.current_month_spent || 0;
 
-    document.getElementById(
-      "monthly-spent"
-    ).textContent = `₦${this.formatNumber(monthlyTotal)}`;
+    document.getElementById("monthly-spent").textContent =
+      `₦${this.formatNumber(monthlyTotal)}`;
 
     // Calculate monthly change using backend monthly_spending data
     const changeElement = document.getElementById("monthly-change");
@@ -193,9 +192,8 @@ class QuickLedger {
     }
 
     // Enhanced daily average with trend
-    document.getElementById(
-      "daily-average"
-    ).textContent = `₦${this.formatNumber(stats.daily_average)}`;
+    document.getElementById("daily-average").textContent =
+      `₦${this.formatNumber(stats.daily_average)}`;
 
     const trendElement = document.getElementById("daily-trend");
     const trend = this.calculateSpendingTrend(allExpenses);
@@ -205,22 +203,20 @@ class QuickLedger {
     const topCategory = stats.most_spent_category;
     document.getElementById("top-category").textContent =
       this.formatCategoryName(topCategory?.name) || "N/A";
-    document.getElementById(
-      "top-category-amount"
-    ).textContent = `₦${this.formatNumber(topCategory?.amount || 0)} spent`;
+    document.getElementById("top-category-amount").textContent =
+      `₦${this.formatNumber(topCategory?.amount || 0)} spent`;
 
     // Week stats
     const weekExpensesArray = Array.isArray(weekExpenses) ? weekExpenses : [];
     const weekTotal = weekExpensesArray.reduce(
       (sum, exp) => sum + parseFloat(exp.amount || 0),
-      0
+      0,
     );
     document.getElementById("week-spent").textContent = `₦${this.formatNumber(
-      weekTotal
+      weekTotal,
     )}`;
-    document.getElementById(
-      "week-transactions"
-    ).textContent = `${weekExpensesArray.length} transactions`;
+    document.getElementById("week-transactions").textContent =
+      `${weekExpensesArray.length} transactions`;
   }
 
   updateRecentExpenses(expenses) {
@@ -246,23 +242,23 @@ class QuickLedger {
                     </div>
                     <div>
                         <p class="font-medium text-gray-900">${this.formatExpenseName(
-                          expense.expense
+                          expense.expense,
                         )}</p>
                         <p class="text-sm text-gray-500">${this.formatDate(
-                          expense.date
+                          expense.date,
                         )} • ${this.getCategoryDisplay(expense.expense)}</p>
                     </div>
                 </div>
                 <div class="text-right">
                     <span class="font-semibold text-gray-900">₦${this.formatNumber(
-                      expense.amount
+                      expense.amount,
                     )}</span>
                     <p class="text-xs text-gray-500">${this.getTimeAgo(
-                      expense.date
+                      expense.date,
                     )}</p>
                 </div>
             </div>
-        `
+        `,
       )
       .join("");
   }
@@ -347,7 +343,7 @@ class QuickLedger {
     const topCategories = categories.slice(0, 4);
     const total = categories.reduce(
       (sum, cat) => sum + (cat.amount || cat.total_amount),
-      0
+      0,
     );
 
     container.innerHTML = topCategories
@@ -360,12 +356,12 @@ class QuickLedger {
           <div class="flex items-center space-x-2">
             <div class="w-3 h-3 rounded-full bg-blue-500"></div>
             <span class="text-sm font-medium text-gray-700">${this.formatCategoryName(
-              category.name
+              category.name,
             )}</span>
           </div>
           <div class="text-right">
             <span class="text-sm font-semibold text-gray-900">₦${this.formatNumber(
-              amount
+              amount,
             )}</span>
             <p class="text-xs text-gray-500">${percentage}%</p>
           </div>
@@ -388,7 +384,7 @@ class QuickLedger {
         <span class="text-lg">${insight.icon}</span>
         <p class="text-sm text-gray-700">${insight.text}</p>
       </div>
-    `
+    `,
       )
       .join("");
   }
@@ -402,18 +398,14 @@ class QuickLedger {
         const percentage = Math.min(budgetData.percentage, 100);
         const remaining = budgetData.remaining;
 
-        document.getElementById(
-          "budget-percentage"
-        ).textContent = `${percentage.toFixed(1)}%`;
-        document.getElementById(
-          "budget-progress"
-        ).style.width = `${percentage}%`;
-        document.getElementById(
-          "budget-spent"
-        ).textContent = `₦${this.formatNumber(budgetData.spent)}`;
-        document.getElementById(
-          "budget-limit"
-        ).textContent = `₦${this.formatNumber(budgetData.budget_amount)}`;
+        document.getElementById("budget-percentage").textContent =
+          `${percentage.toFixed(1)}%`;
+        document.getElementById("budget-progress").style.width =
+          `${percentage}%`;
+        document.getElementById("budget-spent").textContent =
+          `₦${this.formatNumber(budgetData.spent)}`;
+        document.getElementById("budget-limit").textContent =
+          `₦${this.formatNumber(budgetData.budget_amount)}`;
 
         const progressBar = document.getElementById("budget-progress");
         if (percentage > 90) {
@@ -430,12 +422,12 @@ class QuickLedger {
         const statusElement = document.getElementById("budget-status");
         if (budgetData.over_budget) {
           statusElement.textContent = `₦${this.formatNumber(
-            Math.abs(remaining)
+            Math.abs(remaining),
           )} over budget`;
           statusElement.className = "text-sm text-red-600";
         } else {
           statusElement.textContent = `₦${this.formatNumber(
-            remaining
+            remaining,
           )} remaining this month`;
           statusElement.className = "text-sm text-green-600";
         }
@@ -452,14 +444,18 @@ class QuickLedger {
         const monthlySpent = stats.current_month_spent || 0;
         document.getElementById("budget-percentage").textContent = "0%";
         document.getElementById("budget-progress").style.width = "0%";
-        document.getElementById(
-          "budget-spent"
-        ).textContent = `₦${this.formatNumber(monthlySpent)}`;
+        document.getElementById("budget-spent").textContent =
+          `₦${this.formatNumber(monthlySpent)}`;
         document.getElementById("budget-limit").textContent = "No budget set";
-        document.getElementById("budget-status").textContent =
-          "Set a monthly budget to track your spending goals";
-        document.getElementById("budget-status").className =
-          "text-sm text-gray-600";
+
+        const statusElement = document.getElementById("budget-status");
+        statusElement.innerHTML = `
+          Set a monthly budget to track your spending goals
+          <button onclick="setBudget()" class="ml-2 text-blue-600 hover:text-blue-800 text-sm underline">
+            Set Budget
+          </button>
+        `;
+        statusElement.className = "text-sm text-gray-600";
       }
 
       // Update remove button visibility
@@ -480,16 +476,13 @@ class QuickLedger {
       const percentage = Math.min((monthlySpent / budget) * 100, 100);
       const remaining = budget - monthlySpent;
 
-      document.getElementById(
-        "budget-percentage"
-      ).textContent = `${percentage.toFixed(1)}%`;
+      document.getElementById("budget-percentage").textContent =
+        `${percentage.toFixed(1)}%`;
       document.getElementById("budget-progress").style.width = `${percentage}%`;
-      document.getElementById(
-        "budget-spent"
-      ).textContent = `₦${this.formatNumber(monthlySpent)}`;
-      document.getElementById(
-        "budget-limit"
-      ).textContent = `₦${this.formatNumber(budget)}`;
+      document.getElementById("budget-spent").textContent =
+        `₦${this.formatNumber(monthlySpent)}`;
+      document.getElementById("budget-limit").textContent =
+        `₦${this.formatNumber(budget)}`;
 
       const progressBar = document.getElementById("budget-progress");
       if (percentage > 90) {
@@ -506,12 +499,12 @@ class QuickLedger {
       const statusElement = document.getElementById("budget-status");
       if (remaining > 0) {
         statusElement.textContent = `₦${this.formatNumber(
-          remaining
+          remaining,
         )} remaining this month`;
         statusElement.className = "text-sm text-green-600";
       } else {
         statusElement.textContent = `₦${this.formatNumber(
-          Math.abs(remaining)
+          Math.abs(remaining),
         )} over budget`;
         statusElement.className = "text-sm text-red-600";
       }
@@ -520,12 +513,18 @@ class QuickLedger {
       const monthlySpent = stats.current_month_spent || 0;
       document.getElementById("budget-percentage").textContent = "0%";
       document.getElementById("budget-progress").style.width = "0%";
-      document.getElementById(
-        "budget-spent"
-      ).textContent = `₦${this.formatNumber(monthlySpent)}`;
+      document.getElementById("budget-spent").textContent =
+        `₦${this.formatNumber(monthlySpent)}`;
       document.getElementById("budget-limit").textContent = "No budget set";
-      document.getElementById("budget-status").textContent =
-        "Set a monthly budget to track your spending goals";
+
+      const statusElement = document.getElementById("budget-status");
+      statusElement.innerHTML = `
+        Set a monthly budget to track your spending goals
+        <button onclick="setBudget()" class="ml-2 text-blue-600 hover:text-blue-800 text-sm underline">
+          Set Budget
+        </button>
+      `;
+      statusElement.className = "text-sm text-gray-600";
       document.getElementById("budget-status").className =
         "text-sm text-gray-600";
     }
@@ -557,7 +556,7 @@ class QuickLedger {
         target: 8000,
         current:
           stats.top_categories?.find(
-            (c) => c.name.toLowerCase() === "transport"
+            (c) => c.name.toLowerCase() === "transport",
           )?.amount || 0,
         icon: "🚗",
       },
@@ -574,14 +573,14 @@ class QuickLedger {
         <div class="space-y-2">
           <div class="flex justify-between items-center">
             <span class="text-sm font-medium text-gray-700">${goal.icon} ${
-          goal.name
-        }</span>
+              goal.name
+            }</span>
             <span class="text-xs ${statusClass}">${status}</span>
           </div>
           <div class="w-full bg-gray-200 rounded-full h-2">
             <div class="bg-blue-500 h-2 rounded-full transition-all duration-300" style="width: ${Math.min(
               percentage,
-              100
+              100,
             )}%"></div>
           </div>
           <div class="flex justify-between text-xs text-gray-500">
@@ -676,7 +675,7 @@ class QuickLedger {
 
       this.showToast(
         `Added ${result.parsed_expenses.length} expense(s) successfully!`,
-        "success"
+        "success",
       );
 
       // Clear input
@@ -688,7 +687,7 @@ class QuickLedger {
       console.error("Error processing natural language:", error);
       this.showToast(
         "Error processing text. Please try a different format.",
-        "error"
+        "error",
       );
     } finally {
       this.hideLoading();
@@ -710,7 +709,7 @@ class QuickLedger {
 
       this.showToast(
         `Added ${result.parsed_expenses.length} expense(s) successfully!`,
-        "success"
+        "success",
       );
 
       // Clear input
@@ -719,7 +718,7 @@ class QuickLedger {
       console.error("Error processing natural language:", error);
       this.showToast(
         "Error processing text. Please try a different format.",
-        "error"
+        "error",
       );
     } finally {
       this.hideLoading();
@@ -757,7 +756,28 @@ class QuickLedger {
 
       const result = await api.getExpenses(params);
       this.allExpenses = result.expenses || [];
+      this.originalExpenses = [...this.allExpenses]; // Store original for filtering
       this.totalExpenses = this.allExpenses.length;
+
+      // Reset enhanced features filters when loading new data
+      if (window.enhancedFeatures) {
+        window.enhancedFeatures.searchTerm = "";
+        window.enhancedFeatures.filters = {
+          category: "",
+          amount: "",
+          date: filter || "all",
+        };
+
+        // Clear search input
+        const searchInput = document.getElementById("expense-search");
+        if (searchInput) searchInput.value = "";
+
+        // Reset filter selects
+        const categoryFilter = document.getElementById("category-filter");
+        const amountFilter = document.getElementById("amount-filter");
+        if (categoryFilter) categoryFilter.value = "";
+        if (amountFilter) amountFilter.value = "";
+      }
 
       // Calculate pagination
       const startIndex = (this.currentPage - 1) * this.itemsPerPage;
@@ -768,9 +788,12 @@ class QuickLedger {
       this.updatePagination();
 
       // Update count
-      document.getElementById("expense-count").textContent = `${
-        this.totalExpenses
-      } expense${this.totalExpenses !== 1 ? "s" : ""}`;
+      const countElement = document.getElementById("expense-count");
+      if (countElement) {
+        countElement.textContent = `${
+          this.totalExpenses
+        } expense${this.totalExpenses !== 1 ? "s" : ""}`;
+      }
     } catch (error) {
       console.error("Error loading expenses:", error);
       this.showToast("Error loading expenses", "error");
@@ -794,9 +817,20 @@ class QuickLedger {
     emptyState.classList.add("hidden");
 
     tableBody.innerHTML = expenses
-      .map(
-        (expense, index) => `
-            <tr class="hover:bg-gray-50 transition-colors">
+      .map((expense, index) => {
+        const expenseId = `${expense.date}-${expense.index || index}`;
+        const highlightedExpense = this.highlightSearchTerm(expense.expense);
+
+        return `
+            <tr class="hover:bg-gray-50 transition-colors expense-table-row">
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <input
+                        type="checkbox"
+                        class="expense-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        data-expense-id="${expenseId}"
+                        onchange="toggleExpenseSelection(this)"
+                    />
+                </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                     <div class="flex items-center">
                         <div class="w-10 h-10 bg-gradient-to-r from-blue-400 to-blue-500 rounded-full flex items-center justify-center mr-3">
@@ -805,11 +839,9 @@ class QuickLedger {
                               .toUpperCase()}</span>
                         </div>
                         <div>
-                            <div class="text-sm font-medium text-gray-900">${this.formatExpenseName(
-                              expense.expense
-                            )}</div>
+                            <div class="text-sm font-medium text-gray-900">${highlightedExpense}</div>
                             <div class="text-sm text-gray-500">${this.getTimeAgo(
-                              expense.date
+                              expense.date,
                             )}</div>
                         </div>
                     </div>
@@ -824,7 +856,7 @@ class QuickLedger {
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-right">
                     <div class="text-sm font-semibold text-gray-900">₦${this.formatNumber(
-                      expense.amount
+                      expense.amount,
                     )}</div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-center">
@@ -832,8 +864,8 @@ class QuickLedger {
                         <button 
                             onclick="app.editExpense('${
                               expense.date
-                            }', ${index})" 
-                            class="text-blue-600 hover:text-blue-800 p-1 rounded-md hover:bg-blue-50 transition-colors"
+                            }', ${expense.index || index})" 
+                            class="text-blue-600 hover:text-blue-800 p-1 rounded-md hover:bg-blue-50 transition-colors action-button"
                             title="Edit expense"
                         >
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -843,8 +875,8 @@ class QuickLedger {
                         <button 
                             onclick="app.deleteExpense('${
                               expense.date
-                            }', ${index})" 
-                            class="text-red-600 hover:text-red-800 p-1 rounded-md hover:bg-red-50 transition-colors"
+                            }', ${expense.index || index})" 
+                            class="text-red-600 hover:text-red-800 p-1 rounded-md hover:bg-red-50 transition-colors action-button"
                             title="Delete expense"
                         >
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -854,8 +886,8 @@ class QuickLedger {
                     </div>
                 </td>
             </tr>
-        `
-      )
+        `;
+      })
       .join("");
   }
 
@@ -953,7 +985,7 @@ class QuickLedger {
     if (!container) return;
 
     const categories = Object.entries(data.categories || {}).sort(
-      (a, b) => b[1] - a[1]
+      (a, b) => b[1] - a[1],
     );
 
     container.innerHTML = `
@@ -961,7 +993,7 @@ class QuickLedger {
         <div class="bg-blue-50 rounded-lg p-4">
           <p class="text-sm text-blue-600 font-medium">Total Spent</p>
           <p class="text-2xl font-bold text-blue-900">₦${this.formatNumber(
-            data.total_spent
+            data.total_spent,
           )}</p>
           <p class="text-xs text-blue-600 mt-1">${
             data.transaction_count
@@ -970,7 +1002,7 @@ class QuickLedger {
         <div class="bg-green-50 rounded-lg p-4">
           <p class="text-sm text-green-600 font-medium">Daily Average</p>
           <p class="text-2xl font-bold text-green-900">₦${this.formatNumber(
-            data.daily_average
+            data.daily_average,
           )}</p>
           <p class="text-xs text-green-600 mt-1">${
             data.days_tracked
@@ -1008,10 +1040,10 @@ class QuickLedger {
                       <div class="flex-1">
                         <div class="flex justify-between items-center mb-1">
                           <span class="font-medium text-gray-900">${this.formatCategoryName(
-                            name
+                            name,
                           )}</span>
                           <span class="text-sm font-semibold text-gray-900">₦${this.formatNumber(
-                            amount
+                            amount,
                           )}</span>
                         </div>
                         <div class="w-full bg-gray-200 rounded-full h-2">
@@ -1044,14 +1076,14 @@ class QuickLedger {
                         }</span>
                       </div>
                       <span class="font-medium text-gray-900">${this.formatExpenseName(
-                        exp.name
+                        exp.name,
                       )}</span>
                     </div>
                     <span class="font-semibold text-gray-900">₦${this.formatNumber(
-                      exp.amount
+                      exp.amount,
                     )}</span>
                   </div>
-                `
+                `,
                   )
                   .join("")
               : '<p class="text-gray-500 text-center py-4">No expenses for this month</p>'
@@ -1063,12 +1095,10 @@ class QuickLedger {
 
   displayEnhancedAnalytics(stats, expenses) {
     // Update key metrics cards
-    document.getElementById(
-      "analytics-total-spent"
-    ).textContent = `₦${this.formatNumber(stats.total_spent)}`;
-    document.getElementById(
-      "analytics-daily-avg"
-    ).textContent = `₦${this.formatNumber(stats.daily_average)}`;
+    document.getElementById("analytics-total-spent").textContent =
+      `₦${this.formatNumber(stats.total_spent)}`;
+    document.getElementById("analytics-daily-avg").textContent =
+      `₦${this.formatNumber(stats.daily_average)}`;
     document.getElementById("analytics-top-category").textContent =
       this.formatCategoryName(stats.most_spent_category?.name) || "N/A";
     document.getElementById("analytics-transactions").textContent =
@@ -1141,7 +1171,7 @@ class QuickLedger {
 
     // Food spending insight
     const foodCategory = stats.top_categories?.find(
-      (cat) => cat.name.toLowerCase() === "food"
+      (cat) => cat.name.toLowerCase() === "food",
     );
     if (foodCategory) {
       const foodPercentage = (
@@ -1151,7 +1181,7 @@ class QuickLedger {
       insights.push({
         icon: "🍽️",
         text: `Food represents ${foodPercentage}% of your total spending (₦${this.formatNumber(
-          foodCategory.amount
+          foodCategory.amount,
         )})`,
       });
     }
@@ -1162,14 +1192,14 @@ class QuickLedger {
       insights.push({
         icon: "📈",
         text: `Your daily average of ₦${this.formatNumber(
-          avgDaily
+          avgDaily,
         )} is quite high. Consider tracking smaller expenses.`,
       });
     } else if (avgDaily < 500) {
       insights.push({
         icon: "💡",
         text: `Great job keeping daily spending low at ₦${this.formatNumber(
-          avgDaily
+          avgDaily,
         )} average!`,
       });
     }
@@ -1202,7 +1232,7 @@ class QuickLedger {
           <span class="text-2xl">${insight.icon}</span>
           <p class="text-sm text-gray-700">${insight.text}</p>
         </div>
-      `
+      `,
         )
         .join("");
     }
@@ -1229,18 +1259,18 @@ class QuickLedger {
           </div>
           <div>
             <p class="font-medium text-gray-900">${this.formatExpenseName(
-              expense.name
+              expense.name,
             )}</p>
             <p class="text-sm text-gray-500">${expense.count || 1} transaction${
-          (expense.count || 1) > 1 ? "s" : ""
-        }</p>
+              (expense.count || 1) > 1 ? "s" : ""
+            }</p>
           </div>
         </div>
         <span class="font-semibold text-gray-900">₦${this.formatNumber(
-          expense.total_amount || expense.amount
+          expense.total_amount || expense.amount,
         )}</span>
       </div>
-    `
+    `,
       )
       .join("");
   }
@@ -1275,7 +1305,7 @@ class QuickLedger {
         value:
           this.formatCategoryName(stats.most_spent_category?.name) || "N/A",
         details: `₦${this.formatNumber(
-          stats.most_spent_category?.amount || 0
+          stats.most_spent_category?.amount || 0,
         )}`,
       },
       {
@@ -1292,7 +1322,7 @@ class QuickLedger {
       {
         metric: "Average per Transaction",
         value: `₦${this.formatNumber(
-          stats.total_spent / stats.transaction_count
+          stats.total_spent / stats.transaction_count,
         )}`,
         details: "Per expense entry",
       },
@@ -1306,7 +1336,7 @@ class QuickLedger {
         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${row.value}</td>
         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${row.details}</td>
       </tr>
-    `
+    `,
       )
       .join("");
   }
@@ -1347,6 +1377,20 @@ class QuickLedger {
   // Enhanced utility methods
   formatNumber(num) {
     return new Intl.NumberFormat("en-NG").format(num);
+  }
+
+  highlightSearchTerm(text) {
+    if (!window.enhancedFeatures || !window.enhancedFeatures.searchTerm) {
+      return this.formatExpenseName(text);
+    }
+
+    const searchTerm = window.enhancedFeatures.searchTerm;
+    const formattedText = this.formatExpenseName(text);
+    const regex = new RegExp(`(${searchTerm})`, "gi");
+    return formattedText.replace(
+      regex,
+      '<span class="search-highlight">$1</span>',
+    );
   }
 
   formatDate(dateString) {
@@ -1409,7 +1453,7 @@ class QuickLedger {
       const dayExpenses = expenses.filter((exp) => exp.date === dateStr);
       const total = dayExpenses.reduce(
         (sum, exp) => sum + parseFloat(exp.amount),
-        0
+        0,
       );
 
       days.push({
@@ -1444,7 +1488,7 @@ class QuickLedger {
       insights.push({
         icon: "💡",
         text: `Your daily average of ₦${this.formatNumber(
-          stats.daily_average
+          stats.daily_average,
         )} is above typical range`,
       });
     }
@@ -1459,7 +1503,7 @@ class QuickLedger {
       insights.push({
         icon: "📊",
         text: `${this.formatCategoryName(
-          topCategory.name
+          topCategory.name,
         )} accounts for ${percentage}% of your spending`,
       });
     }
@@ -1477,12 +1521,12 @@ class QuickLedger {
     if (recentExpenses.length > 0) {
       const recentTotal = recentExpenses.reduce(
         (sum, exp) => sum + parseFloat(exp.amount),
-        0
+        0,
       );
       insights.push({
         icon: "⚡",
         text: `₦${this.formatNumber(
-          recentTotal
+          recentTotal,
         )} spent in your last 3 transactions`,
       });
     }
@@ -1505,7 +1549,7 @@ class QuickLedger {
     const startItem = (this.currentPage - 1) * this.itemsPerPage + 1;
     const endItem = Math.min(
       this.currentPage * this.itemsPerPage,
-      this.totalExpenses
+      this.totalExpenses,
     );
 
     // Update pagination info
@@ -1612,7 +1656,7 @@ class QuickLedger {
         this.updateBudgetTracker({ total_spent: 0 });
         this.showToast(
           "Budget updated successfully! (Local storage)",
-          "success"
+          "success",
         );
         this.updateRemoveBudgetButton(true);
       }
@@ -1640,7 +1684,7 @@ class QuickLedger {
         this.updateBudgetTracker({ total_spent: 0 });
         this.showToast(
           "Budget removed successfully! (Local storage)",
-          "success"
+          "success",
         );
         this.updateRemoveBudgetButton(false);
       }
@@ -1690,19 +1734,19 @@ class QuickLedger {
       return "Food";
     } else if (
       ["transport", "fuel", "taxi", "bus", "uber"].some((keyword) =>
-        expense.includes(keyword)
+        expense.includes(keyword),
       )
     ) {
       return "Transport";
     } else if (
       ["data", "airtime", "internet"].some((keyword) =>
-        expense.includes(keyword)
+        expense.includes(keyword),
       )
     ) {
       return "Data";
     } else if (
       ["electricity", "water", "gas", "phone"].some((keyword) =>
-        expense.includes(keyword)
+        expense.includes(keyword),
       )
     ) {
       return "Utilities";
@@ -1734,8 +1778,8 @@ class QuickLedger {
       type === "success"
         ? "bg-green-500"
         : type === "error"
-        ? "bg-red-500"
-        : "bg-blue-500";
+          ? "bg-red-500"
+          : "bg-blue-500";
 
     toast.className = `${bgColor} text-white px-6 py-3 rounded-lg shadow-lg transform transition-all duration-300 translate-x-full`;
     toast.textContent = message;
